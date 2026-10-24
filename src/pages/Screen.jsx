@@ -312,7 +312,6 @@ function DemoPanel({ state, refresh, scenario, setScenario }) {
 export function ScreenView({ demo = false }) {
   const [scenario, setScenario] = useState("supply");
   const { state, error, refresh } = useTakasState(1500, demo ? `/api/demo/state?scenario=${scenario}` : "/api/state");
-  const payroll = demo && scenario === "payroll";
   const bench = useBench();
   const [qr, setQr] = useState("");
   const link = `${location.origin}/#/play`;
@@ -335,7 +334,16 @@ export function ScreenView({ demo = false }) {
     if (!state) return;
     const before = prev.current;
     prev.current = state;
-    if (!before || before.contract !== state.contract || state.session <= before.session || !state.lastSettle || state.lastSettle.stats.invoices === 0) return;
+    if (before && before.contract !== state.contract) {
+      // Senaryo değişti: önceki senaryonun animasyonu ve kartı kapanır.
+      timers.current.forEach(clearTimeout);
+      timers.current = [];
+      setPhase("idle");
+      setDying(null);
+      setDone(null);
+      return;
+    }
+    if (!before || state.session <= before.session || !state.lastSettle || state.lastSettle.stats.invoices === 0) return;
     const after = (ms, fn) => timers.current.push(setTimeout(fn, ms));
     timers.current.forEach(clearTimeout);
     timers.current = [];
@@ -346,7 +354,7 @@ export function ScreenView({ demo = false }) {
     after(60, () => setFadeOn(true));
     after(FADE_MS, () => {
       setPhase("done");
-      setDone(state.lastSettle);
+      setDone({ ...state.lastSettle, scenario: state.scenario });
     });
     after(FADE_MS + DONE_MS, () => {
       setPhase("idle");
@@ -443,7 +451,7 @@ export function ScreenView({ demo = false }) {
             {phase === "done" && done && (
               <div className="done-card" role="status">
                 <h2>TAKAS TAMAM</h2>
-                {payroll ? (
+                {done.scenario === "payroll" ? (
                   <>
                     <div className="n num" style={{ marginBottom: 16, fontSize: 30, whiteSpace: "normal" }}>
                       {num(done.stats.invoices)} maaş tek işlemde ödendi
