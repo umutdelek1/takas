@@ -46,6 +46,11 @@ contract Takas {
     uint64 internal _feeBalanceUnits;
     uint32 public session;
     uint32 internal _openInvoices;
+    /// @notice Son takasın blok numarası; arayüz Settled olayını tek blokluk aralıkla okur.
+    uint64 public lastSettleBlock;
+    /// @notice Bugüne kadar kapanan toplam brüt borç ve el değiştiren nakit (birim).
+    uint128 public cumGrossUnits;
+    uint128 public cumCashUnits;
 
     /// @dev Esnaf adresleri, numara sırasıyla.
     address[] internal _members;
@@ -179,6 +184,10 @@ contract Takas {
         uint256 id = session + 1;
         // forge-lint: disable-next-line(unsafe-typecast)
         session = uint32(id);
+        // forge-lint: disable-next-line(unsafe-typecast)
+        lastSettleBlock = uint64(block.number);
+        cumGrossUnits += uint128(s.grossWei / UNIT);
+        cumCashUnits += uint128(s.cashWei / UNIT);
 
         s.gasUsed = g0 - gasleft();
         emit Settled(id, s);
