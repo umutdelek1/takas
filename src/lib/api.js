@@ -24,23 +24,23 @@ export const postJson = (path, body, headers = {}) =>
 export function useTakasState(intervalMs = 2000, path = "/api/state") {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
-  const alive = useRef(true);
   const refresh = useRef(() => {});
 
   useEffect(() => {
-    alive.current = true;
+    // Her efekt kendi bayrağını taşır: yol değişince eski döngü yeni durumu ezemez.
+    let alive = true;
     let timer;
     const tick = async () => {
       try {
         const s = await getState(path);
-        if (alive.current) {
+        if (alive) {
           setState(s);
           setError(null);
         }
       } catch (e) {
-        if (alive.current) setError(e.message);
+        if (alive) setError(e.message);
       }
-      if (alive.current) timer = setTimeout(tick, intervalMs);
+      if (alive) timer = setTimeout(tick, intervalMs);
     };
     refresh.current = () => {
       clearTimeout(timer);
@@ -48,7 +48,7 @@ export function useTakasState(intervalMs = 2000, path = "/api/state") {
     };
     tick();
     return () => {
-      alive.current = false;
+      alive = false;
       clearTimeout(timer);
     };
   }, [intervalMs, path]);

@@ -395,7 +395,7 @@ a:focus-visible {
   padding: 20px 28px 28px;
   display: grid;
   gap: 18px;
-  grid-template-rows: auto 1fr;
+  align-content: start;
 }
 
 .screen-grid {
