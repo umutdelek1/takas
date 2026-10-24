@@ -21,6 +21,11 @@ Varsayımsal örnek: 230 MON'luk bir borç zinciri yalnızca 40 MON nakit hareke
 - **TAKAS kazanır:** Takasta kapanan her fatura için küçük sabit bir ücret (0,0005 MON), borçlunun teminatından kesilip kasada birikir. Yani yalnızca işletmeye kazandırdığımızdan pay alırız. Kurucu `setFee()` ile ücreti ayarlar, `withdrawFees()` ile kasayı çeker.
 - **Yol haritası:** Boştaki teminatın getirisi (Monad üzerindeki borç verme protokolleri), alacağını erken nakde çevirme (faktoring), ticaret odaları ve tedarik ağları için kurumsal lisans.
 
+## Kullanım alanları
+- **Tedarik zinciri borç takası (ana kullanım):** Zincirdeki işletmeler birbirine olan borçlarını dönem sonunda tek işlemde netleştirir; yalnızca net fark nakit olarak hareket eder.
+- **Toplu maaş ve hakediş ödemeleri:** Şirket çalışanlarına veya taşeronlarına borç yazar, takas anında hepsi tek işlemde ödenir. Alıcı kayıtlı olmalıdır (teminatı 0 olabilir); ödeme alıcının teminat hesabına geçer ve `withdraw()` ile çekilir. Alıcının ağda başka bir borcu varsa o da aynı anda netleşir. Monad'da tek işlemde 20.000 fatura kapandı (ölçüldü), yani on binlerce ödemenin tek işlemde yapılması mümkündür. Ödeyen şirketin teminatı net ödemesini ve takas ücretini karşılamalıdır.
+- **Ticaret odaları ve toptancı ağları:** Üyeler arasında dönemsel (haftalık, aylık) toplu takas.
+
 ## Neden Monad? (ölçüldü)
 Takas, tüm defteri tek işlemde okuyup günceller. Bu iş depolama ağırlıklıdır.
 
