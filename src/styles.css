@@ -865,6 +865,10 @@ a:focus-visible {
   background: var(--credit);
   color: var(--ink-on-green);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* yalnızca takas anında belirir; kalıcı sonuç kartı sabit durur */
+.done-card.overlay {
   animation: rise 0.5s ease both;
 }
 
