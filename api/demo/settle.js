@@ -1,13 +1,14 @@
 import { parseEventLogs } from "viem";
 import { publicClient, hostWallet, route, HttpError, sendWithRetry, pad, EXPLORER } from "../_lib.js";
-import { demoAbi, requireDemo, rateLimit, lock, unlock } from "../_demo.js";
+import { demoAbi, addressOf, scenarioOf, rateLimit, lock, unlock } from "../_demo.js";
 
-/** Demo ağında settle(): token yok, herkes çağırabilir; IP başına 8 sn, ortak 5 sn sınır. */
+/** Demo ağında settle(): token yok, herkes çağırabilir; IP başına 8 sn, senaryo başına ortak 5 sn sınır. */
 export default route(async (req, res) => {
   if (req.method !== "POST") throw new HttpError(405, "Yalnızca POST.");
-  const address = requireDemo();
-  rateLimit(req, "settle", 8_000);
-  lock("settle", 5_000);
+  const scenario = scenarioOf(req);
+  const address = addressOf(scenario);
+  rateLimit(req, `settle:${scenario}`, 8_000);
+  lock(`settle:${scenario}`, 5_000);
   try {
     const wallet = hostWallet();
     let estimate;
@@ -19,7 +20,7 @@ export default route(async (req, res) => {
         account: wallet.account,
       });
     } catch (e) {
-      if (String(e?.message).includes("NoOpenInvoices")) throw new HttpError(409, "Açık fatura yok. Önce demo ağını oluştur.");
+      if (String(e?.message).includes("NoOpenInvoices")) throw new HttpError(409, "Açık fatura yok. Önce bir senaryo seç.");
       throw e;
     }
     const gas = pad(estimate);
@@ -30,6 +31,7 @@ export default route(async (req, res) => {
     const s = ev.args.stats;
     res.status(200).json({
       ok: true,
+      scenario,
       txHash: hash,
       explorer: `${EXPLORER}/tx/${hash}`,
       session: Number(ev.args.session),
@@ -46,7 +48,7 @@ export default route(async (req, res) => {
       },
     });
   } catch (e) {
-    unlock("settle");
+    unlock(`settle:${scenario}`);
     throw e;
   }
 });

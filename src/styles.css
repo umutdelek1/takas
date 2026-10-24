@@ -654,3 +654,36 @@ td:first-child {
   font-size: 15px;
   letter-spacing: 0.02em;
 }
+.scenario {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font-size: 17px;
+}
+
+.scenario span {
+  font-size: 13px;
+}
+
+.scenario:hover:not(:disabled) {
+  background: var(--line);
+}
+
+.scenario.on {
+  border-color: var(--accent);
+  background: rgba(139, 116, 255, 0.16);
+}
+
+.scenario:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

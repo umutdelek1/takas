@@ -23,7 +23,7 @@ Varsayımsal örnek: 230 MON'luk bir borç zinciri yalnızca 40 MON nakit hareke
 
 ## Kullanım alanları
 - **Tedarik zinciri borç takası (ana kullanım):** Zincirdeki işletmeler birbirine olan borçlarını dönem sonunda tek işlemde netleştirir; yalnızca net fark nakit olarak hareket eder.
-- **Toplu maaş ve hakediş ödemeleri:** Şirket çalışanlarına veya taşeronlarına borç yazar, takas anında hepsi tek işlemde ödenir. Alıcı kayıtlı olmalıdır (teminatı 0 olabilir); ödeme alıcının teminat hesabına geçer ve `withdraw()` ile çekilir. Alıcının ağda başka bir borcu varsa o da aynı anda netleşir. Monad'da tek işlemde 20.000 fatura kapandı (ölçüldü), yani on binlerce ödemenin tek işlemde yapılması mümkündür. Ödeyen şirketin teminatı net ödemesini ve takas ücretini karşılamalıdır.
+- **Toplu maaş ve hakediş ödemeleri:** Şirket çalışanlarına veya taşeronlarına borç yazar, takas anında hepsi tek işlemde ödenir. Alıcı kayıtlı olmalıdır (teminatı 0 olabilir); ödeme alıcının teminat hesabına geçer ve `withdraw()` ile çekilir. Alıcının ağda başka bir borcu varsa o da aynı anda netleşir. Monad'da tek işlemde 20.000 fatura kapandı (ölçüldü), yani on binlerce ödemenin tek işlemde yapılması mümkündür. **Toplu maaş ve hakediş: [#/demo](https://takas-six.vercel.app/#/demo)'da "Maaş günü" senaryosu** (1 şirket, 200 çalışan, 200 maaş tek işlemde). Ödeyen şirketin teminatı net ödemesini ve takas ücretini karşılamalıdır.
 - **Ticaret odaları ve toptancı ağları:** Üyeler arasında dönemsel (haftalık, aylık) toplu takas.
 
 ## Neden Monad? (ölçüldü)
@@ -39,7 +39,7 @@ Takas, tüm defteri tek işlemde okuyup günceller. Bu iş depolama ağırlıkl�
 
 Kanıt işlemi: [Monad testnet explorer](https://testnet.monadexplorer.com/tx/0xa7adf24e16719ab9f4a7dd9f05198ab7f03eea0e63dc0a0ca49a476cc9ad5ab3)
 
-Ölçümün yapıldığı `TakasStress`, `Takas`'ı miras alır ve `settle()`'ı değiştirmez. Ölçüm kontratının ve canlı `Takas` kontratının zincirdeki çalışma kodu, bu depodaki `contracts/src` kaynağının güncel derlemesiyle bayt bayt aynıdır; yani `settle()` ölçülen ve canlıda çalışan kodla aynı kaynaktan derlenmiştir.
+Ölçümün yapıldığı `TakasStress`, `Takas`'ı miras alır ve `settle()`'ı değiştirmez. Ölçüm kontratının zincirdeki çalışma kodu, ölçüm anındaki `contracts/src` derlemesiyle bayt bayt aynıydı; sonradan `TakasStress`'e yalnızca demo için `seedPayroll` eklendi, `settle()`'ın bulunduğu `Takas.sol` değişmedi. Canlı `Takas` kontratının zincirdeki çalışma kodu da güncel derlemeyle bayt bayt aynıdır.
 
 Ham veri: [`public/bench.json`](public/bench.json). Her rakam kaynağıyla etiketlidir: **ölçülen** (gerçek işlem makbuzu ve `Settled` olayı), **tahmin** (`eth_estimateGas`, işlem gönderilmedi), **hesaplanan** (ölçülen değerlerden türetildi). Grafik: `/#/olcum`.
 
@@ -58,7 +58,9 @@ Ham veri: [`public/bench.json`](public/bench.json). Her rakam kaynağıyla etike
 - Takas: [`0x670f4f68c7993d13361a1ef6987f03f3c049930d`](https://testnet.monadexplorer.com/address/0x670f4f68c7993d13361a1ef6987f03f3c049930d)
 - TakasStress (ölçüm, 10.000 işletmelik gerçek takas bu kontratta yapıldı): [`0x4e212ec77ef2d0a2588e0337da72b7cf41434492`](https://testnet.monadexplorer.com/address/0x4e212ec77ef2d0a2588e0337da72b7cf41434492)
 
-- Demo (`/#/demo`, ayrı bir TakasStress örneği; canlı Takas'a dokunmaz): [`0x67c6908dab7a1e52c93888ad63b5481fafb1a520`](https://testnet.monadexplorer.com/address/0x67c6908dab7a1e52c93888ad63b5481fafb1a520)
+- Demo (`/#/demo`; canlı Takas'a dokunmayan, ayrı iki TakasStress örneği):
+  - Tedarik zinciri: [`0x04d2877d8b1d29dba5ff2ec3bf553b173a4e506c`](https://testnet.monadexplorer.com/address/0x04d2877d8b1d29dba5ff2ec3bf553b173a4e506c)
+  - Maaş günü: [`0xb9e96a3852c16e16c7ae8822a1d8787e52bc4cbb`](https://testnet.monadexplorer.com/address/0xb9e96a3852c16e16c7ae8822a1d8787e52bc4cbb)
 
 Güncel adresler `src/deployment.js` dosyasındadır.
 
@@ -69,7 +71,7 @@ Güncel adresler `src/deployment.js` dosyasındadır.
 | `/#/play` | Telefon: şirketini kaydet, borç yaz, net durum, takas sonucu |
 | `/#/host` | Takası tetikleme (token korumalı) |
 | `/#/olcum` | Monad ve Ethereum ölçüm grafiği |
-| `/#/demo` | Herkese açık demo: sentetik işletmelerle ağı tek tıkla oluştur, TAKAS'a bas. Gerçek Monad testnet işlemleri, ayrı bir demo kontratı |
+| `/#/demo` | Herkese açık demo, iki senaryo: "Tedarik zinciri" (10 şirket, 20 borç) ve "Maaş günü" (1 şirket, 200 çalışan). Senaryoyu seç, TAKAS'a bas. Sentetik işletmeler, gerçek Monad testnet işlemleri |
 
 ## Mimari
 ```
@@ -78,7 +80,7 @@ api/               Vercel serverless fonksiyonları (ayrı sunucu yok)
   state.js         kontrat durumu, Cache-Control: s-maxage=1
   drip.js          yeni cüzdana 0,2 MON, her adrese bir kez
   settle.js        host anahtarıyla takas
-  demo/            herkese açık demo: state, seed (10 işletme + 20 borç), settle; hız sınırlı
+  demo/            herkese açık demo: state, seed (iki senaryo), settle; hız sınırlı
   rpc.js           telefonlar için RPC vekili (yeniden dene, yedek RPC, anahtar gizli)
 contracts/         Foundry: Takas.sol, TakasStress.sol, testler
 scripts/           deploy, ölçüm ve yardımcı betikler (Node)

@@ -1,31 +1,47 @@
 import { keccak256, pad as padHex, parseAbi, parseEther, toHex } from "viem";
 import { publicClient, deployment, takasAbi, HttpError, EXPLORER } from "./_lib.js";
+import { companyName, initials } from "../src/lib/names.js";
 
-// Demo kontratı: ana Takas'tan AYRI bir TakasStress örneği. Sahibi host cüzdanıdır.
+// Demo kontratları: ana Takas'tan AYRI TakasStress örnekleri; sahibi host cüzdanıdır.
+//   supply  → "Tedarik zinciri" senaryosu (deployment.demo)
+//   payroll → "Maaş günü" senaryosu (deployment.demoPayroll)
 export const demoAbi = [
   ...takasAbi,
   ...parseAbi([
     "function seedMerchants(uint256 count, uint256 collateralWei)",
     "function seedInvoices(uint256 count, uint256 maxAmountWei, uint256 seed)",
+    "function seedPayroll(uint256 companyCollateralWei, uint256 workers, uint256 salaryWei)",
   ]),
 ];
 
-export const MAX_MERCHANTS = 40; // demo ağındaki en çok sentetik işletme
+export const MAX_MERCHANTS = 40; // tedarik zinciri demosundaki en çok sentetik işletme
 export const MAX_OPEN_INVOICES = 60; // üst üste basmayı sınırlar; durum okuması da hafif kalır
 export const MERCHANTS_PER_SEED = 10;
 export const INVOICES_PER_SEED = 20;
 export const SEED_COLLATERAL = parseEther("0.2"); // sentetik teminat: gerçek MON değildir
 export const SEED_MAX_INVOICE = parseEther("0.05");
 
+export const PAYROLL_WORKERS = 200;
+export const PAYROLL_SALARY = parseEther("0.01");
+export const PAYROLL_COLLATERAL = parseEther("2.2"); // 200 × (0,01 maaş + 0,0005 ücret) + pay
+export const PAYROLL_MAX_ACCOUNTS = 3000; // settle() tüm hesapları gezer; demo kontratı bu sınırda dolar
+
 const INVOICES_SLOT = 5n; // TakasStress depolama düzeni: _invoices (forge inspect storageLayout)
 const UNIT = 1_000_000_000_000n;
 
-export function requireDemo() {
-  if (!deployment.demo) throw new HttpError(503, "Demo kontratı henüz yayınlanmadı.");
-  return deployment.demo;
+export function scenarioOf(req) {
+  let s = req.body?.scenario;
+  if (!s && req.url) s = new URL(req.url, "http://x").searchParams.get("scenario");
+  return s === "payroll" ? "payroll" : "supply";
 }
 
-/** Sentetik işletmelerin adresi yazılmaz; arayüz için numaradan türetilen sahte adres kullanılır. */
+export function addressOf(scenario) {
+  const a = scenario === "payroll" ? deployment.demoPayroll : deployment.demo;
+  if (!a) throw new HttpError(503, "Demo kontratı henüz yayınlanmadı.");
+  return a;
+}
+
+/** Sentetik hesapların adresi yazılmaz; arayüz için numaradan türetilen sahte adres kullanılır. */
 export const pseudo = (id) => `0x${BigInt(id).toString(16).padStart(40, "0")}`;
 
 const settledEvent = takasAbi.find((x) => x.type === "event" && x.name === "Settled");
@@ -44,13 +60,19 @@ function statsOut(s) {
   };
 }
 
-let lastCache = { block: -1n, value: null };
-let stateCache = { at: 0, value: null };
+const lastCache = new Map(); // adres → { block, value }
+const stateCache = new Map(); // senaryo → { at, value }
 
-/** /api/state ile aynı biçimde, demo kontratının durumu. */
-export async function demoState() {
-  if (stateCache.value && Date.now() - stateCache.at < 900) return stateCache.value;
-  const address = requireDemo();
+const invoiceSlot = () => BigInt(keccak256(padHex(toHex(INVOICES_SLOT), { size: 32 })));
+const getWord = (address, i) =>
+  publicClient.getStorageAt({ address, slot: toHex(invoiceSlot() + BigInt(i), { size: 32 }) }).then((w) => BigInt(w ?? "0x0"));
+const halfOf = (word, k) => (word >> BigInt((k & 1) * 128)) & ((1n << 128n) - 1n);
+
+/** /api/state ile aynı biçimde, seçilen demo kontratının durumu. */
+export async function demoState(scenario) {
+  const cached = stateCache.get(scenario);
+  if (cached && Date.now() - cached.at < 900) return cached.value;
+  const address = addressOf(scenario);
   const read = (functionName, args = []) => publicClient.readContract({ address, abi: demoAbi, functionName, args });
 
   const [fee, session, feeBalance, memberCount, openCount, lastBlock, cumGross, cumCash, preview, blockNumber] =
@@ -69,47 +91,74 @@ export async function demoState() {
 
   const n = Number(memberCount);
   const m = Number(openCount);
-  const base = BigInt(keccak256(padHex(toHex(INVOICES_SLOT), { size: 32 })));
 
-  const [page, words, last] = await Promise.all([
-    n > 0 ? read("membersPage", [0n, BigInt(n)]) : [[], [], []],
-    Promise.all(
-      Array.from({ length: Math.ceil(m / 2) }, (_, i) =>
-        publicClient.getStorageAt({ address, slot: toHex(base + BigInt(i), { size: 32 }) }),
-      ),
-    ),
-    (async () => {
-      if (lastBlock === 0n) return null;
-      if (lastCache.block === lastBlock) return lastCache.value;
-      const logs = await publicClient.getLogs({ address, event: settledEvent, fromBlock: lastBlock, toBlock: lastBlock });
-      const log = logs[logs.length - 1];
-      const value = log
-        ? {
-            session: Number(log.args.session),
-            block: Number(lastBlock),
-            txHash: log.transactionHash,
-            explorer: `${EXPLORER}/tx/${log.transactionHash}`,
-            stats: statsOut(log.args.stats),
-          }
-        : null;
-      lastCache = { block: lastBlock, value };
-      return value;
-    })(),
-  ]);
+  const lastP = (async () => {
+    if (lastBlock === 0n) return null;
+    const c = lastCache.get(address);
+    if (c && c.block === lastBlock) return c.value;
+    const logs = await publicClient.getLogs({ address, event: settledEvent, fromBlock: lastBlock, toBlock: lastBlock });
+    const log = logs[logs.length - 1];
+    const value = log
+      ? {
+          session: Number(log.args.session),
+          block: Number(lastBlock),
+          txHash: log.transactionHash,
+          explorer: `${EXPLORER}/tx/${log.transactionHash}`,
+          stats: statsOut(log.args.stats),
+        }
+      : null;
+    lastCache.set(address, { block: lastBlock, value });
+    return value;
+  })();
 
-  const invoices = [];
-  for (let k = 0; k < m; k++) {
-    const word = BigInt(words[k >> 1] ?? "0x0");
-    const inv = (word >> BigInt((k & 1) * 128)) & ((1n << 128n) - 1n);
-    invoices.push({
-      debtor: pseudo(inv & 0xffffffffn),
-      creditor: pseudo((inv >> 32n) & 0xffffffffn),
-      amountWei: big(((inv >> 64n) & 0xffffffffffffffffn) * UNIT),
-    });
+  let members = [];
+  let invoices = [];
+
+  if (scenario === "payroll") {
+    // Açık faturalar hep son partinin maaşlarıdır: şirket c → çalışan c+1 … c+m (hepsi aynı tutar).
+    if (m > 0) {
+      const w0 = halfOf(await getWord(address, 0), 0);
+      const company = Number(w0 & 0xffffffffn);
+      const amountWei = big(((w0 >> 64n) & 0xffffffffffffffffn) * UNIT);
+      const page = await read("membersPage", [BigInt(company), BigInt(Math.min(m + 1, n - company))]);
+      members = page[0].map((_, i) => ({
+        id: company + i,
+        address: pseudo(company + i),
+        collateralWei: big(page[1][i]),
+        sicil: Number(page[2][i]),
+        name: i === 0 ? companyName(company) : `Çalışan ${i}`,
+        badge: i === 0 ? initials(company) : `Ç${i}`,
+      }));
+      invoices = Array.from({ length: m }, (_, k) => ({
+        debtor: pseudo(company),
+        creditor: pseudo(company + 1 + k),
+        amountWei,
+      }));
+    }
+  } else {
+    const [page, words] = await Promise.all([
+      n > 0 ? read("membersPage", [0n, BigInt(n)]) : [[], [], []],
+      Promise.all(Array.from({ length: Math.ceil(m / 2) }, (_, i) => getWord(address, i))),
+    ]);
+    members = Array.from({ length: n }, (_, i) => ({
+      id: i,
+      address: pseudo(i),
+      collateralWei: big(page[1][i]),
+      sicil: Number(page[2][i]),
+    }));
+    for (let k = 0; k < m; k++) {
+      const inv = halfOf(words[k >> 1] ?? 0n, k);
+      invoices.push({
+        debtor: pseudo(inv & 0xffffffffn),
+        creditor: pseudo((inv >> 32n) & 0xffffffffn),
+        amountWei: big(((inv >> 64n) & 0xffffffffffffffffn) * UNIT),
+      });
+    }
   }
 
   const value = {
     demo: true,
+    scenario,
     chainId: deployment.chainId,
     contract: address,
     block: Number(blockNumber),
@@ -117,20 +166,15 @@ export async function demoState() {
     feeBalanceWei: big(feeBalance),
     session: Number(session),
     cumulative: { grossWei: big(cumGross * UNIT), cashWei: big(cumCash * UNIT) },
-    members: Array.from({ length: n }, (_, i) => ({
-      id: i,
-      address: pseudo(i),
-      collateralWei: big(page[1][i]),
-      sicil: Number(page[2][i]),
-    })),
+    members,
     memberCount: n,
     invoices,
     invoiceCount: m,
     preview: statsOut(preview),
-    lastSettle: last,
-    limits: { maxMerchants: MAX_MERCHANTS, maxOpenInvoices: MAX_OPEN_INVOICES },
+    lastSettle: await lastP,
+    limits: { maxMerchants: MAX_MERCHANTS, maxOpenInvoices: MAX_OPEN_INVOICES, payrollWorkers: PAYROLL_WORKERS },
   };
-  stateCache = { at: Date.now(), value };
+  stateCache.set(scenario, { at: Date.now(), value });
   return value;
 }
 
