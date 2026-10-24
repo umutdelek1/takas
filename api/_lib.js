@@ -14,22 +14,63 @@ export const monadTestnet = defineChain({
   nativeCurrency: { name: "Monad", symbol: "MON", decimals: 18 },
   rpcUrls: { default: { http: [BACKUP_RPC] } },
   blockExplorers: { default: { name: "MonadExplorer", url: EXPLORER } },
+  // Monad testnet'te kanonik Multicall3: bağımsız okumalar tek eth_call'da birleşir.
+  contracts: { multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" } },
 });
 
-/** Birincil RPC (Alchemy) önce, yedek sonra. 429/5xx'te yeniden dener. */
+// Ortam değişkeni panelden/borudan eklenirken sonuna satır sonu karışabilir; geçersiz URL her
+// çağrıda yeniden deneme + yedeğe geçiş demektir (canlıda ~4 sn). Bu yüzden temizlenir.
+const rawPrimary = process.env.MONAD_RPC_URL || "";
+const primary = rawPrimary.trim();
+export const rpcDiag = {
+  primarySet: !!primary,
+  primaryHadWhitespace: rawPrimary !== primary,
+  primaryValid: /^https?:\/\/\S+$/.test(primary),
+};
+
+/** Birincil RPC (Alchemy) önce, yedek sonra. */
 export function rpcUrls() {
-  return [process.env.MONAD_RPC_URL, BACKUP_RPC].filter(Boolean);
+  return [...new Set([rpcDiag.primaryValid ? primary : null, BACKUP_RPC].filter(Boolean))];
 }
 
 function transport() {
-  return fallback(rpcUrls().map((u) => http(u, { retryCount: 3, retryDelay: 300, timeout: 8000 })));
+  // Kısa zaman aşımı: birincil yanıt vermezse 1,5 sn içinde yedeğe geçilir. Aynı anda giden
+  // istekler tek HTTP JSON-RPC partisinde gider.
+  return fallback(
+    rpcUrls().map((u) => http(u, { retryCount: 1, retryDelay: 150, timeout: 1500, batch: true })),
+    { retryCount: 1, retryDelay: 100 },
+  );
 }
 
 export const publicClient = createPublicClient({
   chain: monadTestnet,
   transport: transport(),
+  batch: { multicall: { wait: 0 } },
   pollingInterval: 500,
 });
+
+/** Basit süre ölçer: her adımın süresini toplar; Server-Timing başlığı ve log için. */
+export function stopwatch() {
+  const t0 = Date.now();
+  const marks = [];
+  return {
+    async time(name, p) {
+      const t = Date.now();
+      try {
+        return await p;
+      } finally {
+        marks.push([name, Date.now() - t]);
+      }
+    },
+    total: () => Date.now() - t0,
+    header(extra = []) {
+      return [...marks, ...extra, ["total", Date.now() - t0]].map(([n, d]) => `${n};dur=${d}`).join(", ");
+    },
+    log(label) {
+      console.log(label, JSON.stringify({ total: Date.now() - t0, steps: Object.fromEntries(marks), rpc: rpcDiag }));
+    },
+  };
+}
 
 export function hostAccount() {
   const k = (process.env.HOST_PRIVATE_KEY || "").trim();

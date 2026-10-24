@@ -1,5 +1,5 @@
 import { keccak256, pad as padHex, parseAbi, parseEther, toHex } from "viem";
-import { publicClient, deployment, takasAbi, HttpError, EXPLORER } from "./_lib.js";
+import { publicClient, deployment, takasAbi, HttpError, EXPLORER, stopwatch } from "./_lib.js";
 import { companyName, initials } from "../src/lib/names.js";
 
 // Demo kontratları: ana Takas'tan AYRI TakasStress örnekleri; sahibi host cüzdanıdır.
@@ -68,14 +68,19 @@ const getWord = (address, i) =>
   publicClient.getStorageAt({ address, slot: toHex(invoiceSlot() + BigInt(i), { size: 32 }) }).then((w) => BigInt(w ?? "0x0"));
 const halfOf = (word, k) => (word >> BigInt((k & 1) * 128)) & ((1n << 128n) - 1n);
 
-/** /api/state ile aynı biçimde, seçilen demo kontratının durumu. */
+/** /api/state ile aynı biçimde, seçilen demo kontratının durumu. [durum, Server-Timing] döndürür. */
 export async function demoState(scenario) {
   const cached = stateCache.get(scenario);
-  if (cached && Date.now() - cached.at < 900) return cached.value;
+  if (cached && Date.now() - cached.at < 900) return [cached.value, "memory;dur=0"];
   const address = addressOf(scenario);
-  const read = (functionName, args = []) => publicClient.readContract({ address, abi: demoAbi, functionName, args });
+  const sw = stopwatch();
+  const read = (functionName, args = []) =>
+    sw.time(functionName, publicClient.readContract({ address, abi: demoAbi, functionName, args }));
+  const payroll = scenario === "payroll";
 
-  const [fee, session, feeBalance, memberCount, openCount, lastBlock, cumGross, cumCash, preview, blockNumber] =
+  // Tek tur: sözleşme okumaları Multicall3'te, depolama okumaları aynı JSON-RPC partisinde gider.
+  // Tedarik zinciri için üst sınır kadar hesap ve fatura kelimesi baştan istenir.
+  const [fee, session, feeBalance, memberCount, openCount, lastBlock, cumGross, cumCash, preview, blockNumber, supplyPage, firstWords] =
     await Promise.all([
       read("fee"),
       read("session"),
@@ -86,7 +91,12 @@ export async function demoState(scenario) {
       read("cumGrossUnits"),
       read("cumCashUnits"),
       read("previewSettle"),
-      publicClient.getBlockNumber(),
+      sw.time("blockNumber", publicClient.getBlockNumber({ cacheTime: 0 })),
+      payroll ? null : read("membersPage", [0n, BigInt(MAX_MERCHANTS)]),
+      sw.time(
+        "storage",
+        Promise.all(Array.from({ length: payroll ? 1 : MAX_OPEN_INVOICES / 2 }, (_, i) => getWord(address, i))),
+      ),
     ]);
 
   const n = Number(memberCount);
@@ -96,7 +106,10 @@ export async function demoState(scenario) {
     if (lastBlock === 0n) return null;
     const c = lastCache.get(address);
     if (c && c.block === lastBlock) return c.value;
-    const logs = await publicClient.getLogs({ address, event: settledEvent, fromBlock: lastBlock, toBlock: lastBlock });
+    const logs = await sw.time(
+      "getLogs",
+      publicClient.getLogs({ address, event: settledEvent, fromBlock: lastBlock, toBlock: lastBlock }),
+    );
     const log = logs[logs.length - 1];
     const value = log
       ? {
@@ -114,10 +127,10 @@ export async function demoState(scenario) {
   let members = [];
   let invoices = [];
 
-  if (scenario === "payroll") {
+  if (payroll) {
     // Açık faturalar hep son partinin maaşlarıdır: şirket c → çalışan c+1 … c+m (hepsi aynı tutar).
     if (m > 0) {
-      const w0 = halfOf(await getWord(address, 0), 0);
+      const w0 = halfOf(firstWords[0], 0);
       const company = Number(w0 & 0xffffffffn);
       const amountWei = big(((w0 >> 64n) & 0xffffffffffffffffn) * UNIT);
       const page = await read("membersPage", [BigInt(company), BigInt(Math.min(m + 1, n - company))]);
@@ -136,11 +149,9 @@ export async function demoState(scenario) {
       }));
     }
   } else {
-    const [page, words] = await Promise.all([
-      n > 0 ? read("membersPage", [0n, BigInt(n)]) : [[], [], []],
-      Promise.all(Array.from({ length: Math.ceil(m / 2) }, (_, i) => getWord(address, i))),
-    ]);
-    members = Array.from({ length: n }, (_, i) => ({
+    const page = supplyPage;
+    const words = firstWords;
+    members = Array.from({ length: page[0].length }, (_, i) => ({
       id: i,
       address: pseudo(i),
       collateralWei: big(page[1][i]),
@@ -175,7 +186,8 @@ export async function demoState(scenario) {
     limits: { maxMerchants: MAX_MERCHANTS, maxOpenInvoices: MAX_OPEN_INVOICES, payrollWorkers: PAYROLL_WORKERS },
   };
   stateCache.set(scenario, { at: Date.now(), value });
-  return value;
+  sw.log(`demo-state:${scenario}`);
+  return [value, sw.header()];
 }
 
 // ---- hız sınırı (sunucu belleğinde; aynı örneğe düşen istekleri sınırlar) ----

@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, defineChain, http, parseEther } from "viem";
+import { createPublicClient, defineChain, encodeFunctionData, http, parseEther } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import deployment from "../deployment.js";
 import { takasAbi } from "../abi.js";
@@ -20,9 +20,10 @@ export const chain = defineChain({
   blockExplorers: { default: { name: "MonadExplorer", url: EXPLORER } },
 });
 
+// Aynı anda giden istekler tek POST'ta (JSON-RPC partisi) /api/rpc'ye gider.
 export const client = createPublicClient({
   chain,
-  transport: http(rpcUrl(), { retryCount: 2, retryDelay: 400 }),
+  transport: http(rpcUrl(), { retryCount: 2, retryDelay: 300, batch: true }),
   pollingInterval: 500,
 });
 
@@ -55,11 +56,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
  * yetmeyebilir. Yeni gelen MON'u RPC henüz görmüyorsa tahmin başarısız olur; birkaç saniye beklenir.
  */
 export async function write(account, functionName, args = [], value = 0n) {
-  const wallet = createWalletClient({ account, chain, transport: http(rpcUrl(), { retryCount: 2, retryDelay: 400 }) });
-  let est;
+  // Hazırlık tek turda: gas tahmini, nonce ve ücretler aynı partide istenir.
+  let est, nonce, fees;
   for (let i = 0; ; i++) {
     try {
-      est = await client.estimateContractGas({ address: CONTRACT, abi: takasAbi, functionName, args, account, value });
+      [est, nonce, fees] = await Promise.all([
+        client.estimateContractGas({ address: CONTRACT, abi: takasAbi, functionName, args, account, value }),
+        client.getTransactionCount({ address: account.address, blockTag: "pending" }),
+        client.estimateFeesPerGas(),
+      ]);
       break;
     } catch (e) {
       const m = String(e?.message || "").toLowerCase();
@@ -70,11 +75,30 @@ export async function write(account, functionName, args = [], value = 0n) {
       throw e;
     }
   }
-  const gas = est + 30_000n;
-  const hash = await wallet.writeContract({ address: CONTRACT, abi: takasAbi, functionName, args, value, gas });
-  const rc = await client.waitForTransactionReceipt({ hash, pollingInterval: 500, timeout: 30_000 });
-  if (rc.status !== "success") throw new Error("REVERTED");
-  return { hash, rc };
+  // Yerelde imzalanır, ham işlem olarak gönderilir (zincir kimliği ve ücret için ek tur yok).
+  const raw = await account.signTransaction({
+    chainId: chain.id,
+    type: "eip1559",
+    to: CONTRACT,
+    data: encodeFunctionData({ abi: takasAbi, functionName, args }),
+    value,
+    nonce,
+    gas: est + 30_000n,
+    maxFeePerGas: fees.maxFeePerGas,
+    maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
+  });
+  const hash = await client.sendRawTransaction({ serializedTransaction: raw });
+  // Onay doğrudan makbuzla, 500 ms aralıkla sorulur.
+  const deadline = Date.now() + 30_000;
+  for (;;) {
+    const rc = await client.getTransactionReceipt({ hash }).catch(() => null);
+    if (rc) {
+      if (rc.status !== "success") throw new Error("REVERTED");
+      return { hash, rc };
+    }
+    if (Date.now() > deadline) throw new Error("timeout");
+    await sleep(500);
+  }
 }
 
 /** Hata → telefonda gösterilecek anlaşılır Türkçe mesaj. */
