@@ -1,27 +1,27 @@
 /*
- * TAKAS — takas odası teması: serin kâğıt zemin, lacivert mürekkep, tek vurgu Monad moru.
- * Alacak zümrüt, borç kırmızı. Gölgesiz beyaz kartlar, 1px çizgiler.
+ * TAKAS — takas odası teması: derin lacivert zemin, sakin kartlar, tek vurgu Monad moru.
+ * Alacak yumuşak yeşil, borç yumuşak kırmızı; neon yok. Gölgesiz beyaz kartlar, 1px çizgiler.
  * Başlıklar Instrument Serif, metin Inter, rakamlar JetBrains Mono (tabular).
  */
 :root {
-  --bg: #f3f5f9;
-  --card: #ffffff;
-  --line: #dfe4ee;
-  --line-strong: #c3cbda;
-  --text: #0e1726;
-  --text-2: #566175;
-  --accent: #6e54ff;
-  --accent-hover: #5a3ff2;
-  --accent-soft: #efecff;
+  --bg: #0b1220;
+  --card: #111a2e;
+  --line: #1f2a44;
+  --line-strong: #2e3c5c;
+  --text: #e6eaf2;
+  --text-2: #8a94a8;
+  --accent: #8b7bff;
+  --accent-hover: #7a62ff;
+  --accent-soft: rgba(139, 123, 255, 0.14);
   --btn: #6e54ff;
-  --credit: #059669;
-  --debt: #dc2626;
-  --eth: #64748b;
-  --ink-on-green: #0e1726;
+  --credit: #34d399;
+  --debt: #f87171;
+  --eth: #94a3b8;
+  --ink-on-green: #0b1220;
   --serif: "Instrument Serif", "Times New Roman", Georgia, serif;
   --sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
-  color-scheme: light;
+  color-scheme: dark;
   font-family: var(--sans);
   color: var(--text);
   background: var(--bg);
@@ -403,7 +403,7 @@ a:focus-visible {
 /* telefondaki takas sonucu: beyaz kart, serif başlık */
 .result-card {
   background: var(--card);
-  border: 1px solid var(--text);
+  border: 1px solid var(--accent);
   color: var(--text);
 }
 
@@ -943,7 +943,7 @@ section.block {
   padding: 36px 40px;
   border-radius: 8px;
   background: var(--card);
-  border: 1px solid var(--text);
+  border: 1px solid var(--accent);
   color: var(--text);
 }
 

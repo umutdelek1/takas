@@ -94,7 +94,7 @@ function DebtGraph({ state, fading }) {
     <svg className="graph" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="İşletmeler arası borç ağı">
       <defs>
         <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0L10 5L0 10z" fill="#DC2626" />
+          <path d="M0 0L10 5L0 10z" fill="#F87171" />
         </marker>
       </defs>
       <g className={`edge ${fading ? "fading" : ""}`}>
@@ -109,7 +109,7 @@ function DebtGraph({ state, fading }) {
           const ex = e.q.x - (dx / len) * to;
           const ey = e.q.y - (dy / len) * to;
           if (star) {
-            return <line key={i} x1={sx} y1={sy} x2={ex} y2={ey} stroke="#DC2626" strokeOpacity="0.55" strokeWidth="1" markerEnd="url(#ah)" />;
+            return <line key={i} x1={sx} y1={sy} x2={ex} y2={ey} stroke="#F87171" strokeOpacity="0.55" strokeWidth="1" markerEnd="url(#ah)" />;
           }
           // hafif eğri: karşılıklı borçlar üst üste binmesin
           const mx = (sx + ex) / 2 - (dy / len) * 22;
@@ -119,7 +119,7 @@ function DebtGraph({ state, fading }) {
               key={i}
               d={`M${sx},${sy} Q${mx},${my} ${ex},${ey}`}
               fill="none"
-              stroke="#DC2626"
+              stroke="#F87171"
               strokeOpacity="0.8"
               strokeWidth={1 + (e.v / max) * 2.2}
               markerEnd="url(#ah)"
@@ -131,14 +131,14 @@ function DebtGraph({ state, fading }) {
         const cos = Math.cos(n.a);
         return (
           <g key={n.id}>
-            <circle cx={n.x} cy={n.y} r={n.hub ? 28 : tiny ? 7 : 18} fill="#FFFFFF" stroke="#6E54FF" strokeWidth={n.hub ? 2 : 1.25} />
+            <circle cx={n.x} cy={n.y} r={n.hub ? 28 : tiny ? 7 : 18} fill="#111A2E" stroke="#8B7BFF" strokeWidth={n.hub ? 2 : 1.25} />
             {(n.hub || !tiny) && (
-              <text x={n.x} y={n.y + 5} textAnchor="middle" fontSize={n.hub ? 15 : 13} fontWeight="600" fill="#0E1726">
+              <text x={n.x} y={n.y + 5} textAnchor="middle" fontSize={n.hub ? 15 : 13} fontWeight="600" fill="#E6EAF2">
                 {n.badge}
               </text>
             )}
             {n.hub && (
-              <text x={n.x} y={n.y + 50} textAnchor="middle" fontSize="15" fill="#566175">
+              <text x={n.x} y={n.y + 50} textAnchor="middle" fontSize="15" fill="#8A94A8">
                 {n.name}
               </text>
             )}
@@ -148,7 +148,7 @@ function DebtGraph({ state, fading }) {
                 y={n.y + Math.sin(n.a) * 28 + 5}
                 textAnchor={cos > 0.2 ? "start" : cos < -0.2 ? "end" : "middle"}
                 fontSize="15"
-                fill="#566175"
+                fill="#8A94A8"
               >
                 {n.name}
               </text>
@@ -157,7 +157,7 @@ function DebtGraph({ state, fading }) {
         );
       })}
       {tiny && (
-        <text x={W / 2} y={H - 8} textAnchor="middle" fontSize="15" fill="#566175">
+        <text x={W / 2} y={H - 8} textAnchor="middle" fontSize="15" fill="#8A94A8">
           {total} maaş faturası · ilk {nodes.length - 1} çalışan gösteriliyor
         </text>
       )}
