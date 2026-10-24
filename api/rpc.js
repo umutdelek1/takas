@@ -68,7 +68,9 @@ async function broadcast(payload) {
   const raw = payload.params?.[0];
   const hash = typeof raw === "string" ? keccak256(raw) : null;
   let last = null;
-  for (let attempt = 0; attempt < 4; attempt++) {
+  // Yeni gelen bakiye RPC'ye genelde 1 sn içinde yansır; kısa ve artan aralıklarla yeniden yayınlanır.
+  const waits = [300, 600, 1000, 1500, 2000];
+  for (let attempt = 0; attempt <= waits.length; attempt++) {
     let insufficient = false;
     for (const url of rpcUrls()) {
       const r = await post(url, payload, 4000);
@@ -82,7 +84,8 @@ async function broadcast(payload) {
       if (m.includes("insufficient")) insufficient = true;
     }
     if (!insufficient && !transient(last)) return last;
-    await sleep(1000 * (attempt + 1));
+    if (attempt === waits.length) break;
+    await sleep(waits[attempt]);
   }
   return last;
 }

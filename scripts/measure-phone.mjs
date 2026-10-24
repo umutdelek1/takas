@@ -59,7 +59,7 @@ async function newWrite(functionName, args, value) {
   const data = encodeFunctionData({ abi: takasAbi, functionName, args });
   const [gas, nonce, fees] = await t(`${functionName}: hazırlık (paralel)`, () =>
     Promise.all([
-      client.estimateGas({ account, to: address, data, value }),
+      client.estimateGas({ account: account.address, to: address, data, value }),
       client.getTransactionCount({ address: account.address, blockTag: "pending" }),
       client.estimateFeesPerGas(),
     ]),

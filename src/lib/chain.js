@@ -61,7 +61,8 @@ export async function write(account, functionName, args = [], value = 0n) {
   for (let i = 0; ; i++) {
     try {
       [est, nonce, fees] = await Promise.all([
-        client.estimateContractGas({ address: CONTRACT, abi: takasAbi, functionName, args, account, value }),
+        // Hesap adresle verilir: yerel hesapta viem önce eth_fillTransaction dener, bir tur kaybedilir.
+        client.estimateContractGas({ address: CONTRACT, abi: takasAbi, functionName, args, account: account.address, value }),
         client.getTransactionCount({ address: account.address, blockTag: "pending" }),
         client.estimateFeesPerGas(),
       ]);
