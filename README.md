@@ -1,5 +1,15 @@
 # TAKAS: İşletmeler arası zincir üstü takas odası
 
+## Neden TAKAS?
+
+Ticarette her şirketin birbirine az çok borcu vardır ve bu borçlar çoğu zaman çekle ödenir. Çek zamanında ödenmezse şirketin itibarı zedelenir; bu yüzden şirket, kasası boş olsa bile çeki ödemek zorunda kalır. Örneğin değeri 10 milyon lira olan arsasını, sırf çeki zamanında ödeyebilmek için 4–5 milyona satar: arsayı alan kazanır, şirket boş yere zarara girer. Türkiye'de 2026'nın ilk dokuz ayında 270 milyar liralık çek karşılıksız kaldı (TBB Risk Merkezi).
+
+Oysa aynı şirketin de alacakları vardır ve borçların çoğu aslında birbirini götürür. TAKAS'ta şirketler borçlarını sisteme ekler; Monad üzerinde tüm borçlar otomatik olarak eşleşir ve ödenebilen her borç tek bir atomik işlemde kapanır. Ağ büyüdükçe daha çok borç birbirini götürür.
+
+**Kazan-kazan:** Şirket hem nakdini hem itibarını korur; TAKAS eşleşen her işlemden küçük bir komisyon alır. Aynı altyapı toplu maaş ödemelerini de tek işlemde yapar.
+
+*Arsa örneği temsilidir.*
+
 **Canlı demo:** https://takas-six.vercel.app · **Tek tıkla dene: [/#/demo](https://takas-six.vercel.app/#/demo)** · **Ağ:** Monad Testnet
 
 ## Problem
