@@ -3,19 +3,23 @@ import { CONTRACT, DEBT_CHOICES, EXPLORER, TEMP_COLLATERAL, client, loadWallet, 
 import { postJson, useTakasState } from "../lib/api.js";
 import { mon, monLabel, shortAddr } from "../lib/format.js";
 import { companyName, initials } from "../lib/names.js";
-import { connectWallet, useExtWallet } from "../lib/wallet.js";
+import { connectWallet, metamaskDeepLink, useExtWallet } from "../lib/wallet.js";
 import { Brand } from "./Brand.jsx";
 import { WalletButton } from "./WalletButton.jsx";
 
 const lc = (s) => (s || "").toLowerCase();
+// Telefonda (MetaMask mobil tarayıcısı dahil) MetaMask zorunlu; bilgisayarda geçici cüzdan varsayılan.
+const isPhone = () => typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 const dripKey = (a) => `takas.drip.${lc(a)}`;
 
 export default function Play() {
-  // Varsayılan: tarayıcıda üretilen geçici cüzdan. Header'dan MetaMask bağlanırsa işlemler onunla imzalanır.
-  const burner = useMemo(() => loadWallet(), []);
-  const { ext } = useExtWallet();
-  const ready = !ext || ext.chainOk;
-  const account = ext ?? burner;
+  // Bilgisayarda varsayılan: tarayıcıda üretilen geçici cüzdan; header'dan MetaMask bağlanırsa onunla imzalanır.
+  // Telefonda MetaMask zorunlu: bağlanmadan kayıt ve borç yazılamaz.
+  const phone = useMemo(() => isPhone(), []);
+  const burner = useMemo(() => (phone ? null : loadWallet()), [phone]);
+  const { ext, msg: walletMsg, available } = useExtWallet();
+  const ready = ext ? ext.chainOk : !phone;
+  const account = ext ?? burner ?? { address: null };
   const { state, error: stateError, refresh } = useTakasState(2000);
   const [balance, setBalance] = useState(null);
   const [dripMsg, setDripMsg] = useState("");
@@ -153,6 +157,34 @@ export default function Play() {
         <Brand />
         <WalletButton />
       </div>
+
+      {phone && !ext && (
+        <section className="card">
+          <h2>Cüzdanını bağla</h2>
+          <p style={{ marginBottom: 14 }}>
+            Telefonda kayıt ve borç yazma MetaMask ile imzalanır. Bağlanınca Monad Testnet MetaMask'a otomatik eklenir ve seçilir.
+          </p>
+          {available ? (
+            <button className="btn block" onClick={connectWallet} disabled={walletMsg.includes("bekleniyor")}>
+              {walletMsg.includes("bekleniyor") ? "Onay bekleniyor…" : "MetaMask ile bağlan"}
+            </button>
+          ) : (
+            <>
+              <a className="btn block" href={metamaskDeepLink()}>
+                MetaMask uygulamasında aç
+              </a>
+              <a className="btn ghost block" style={{ marginTop: 8 }} href="https://metamask.io/download" target="_blank" rel="noreferrer">
+                MetaMask yükle
+              </a>
+            </>
+          )}
+          {walletMsg && !walletMsg.includes("bekleniyor") && (
+            <p className="err" style={{ marginTop: 8 }}>
+              {walletMsg}
+            </p>
+          )}
+        </section>
+      )}
 
       {ext && !ext.chainOk && (
         <section className="card">
