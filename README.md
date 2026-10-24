@@ -4,7 +4,8 @@
 
 Esnaf birbirine sürekli borçlanır: manav toptancıya, toptancı nakliyeciye, nakliyeci manava. Her fatura ayrı ayrı nakitle kapanınca gereksiz para dolaşır. TAKAS bütün açık faturaları **tek atomik işlemde** netleştirir: herkes yalnızca **net** borcunu öder, döngüler nakitsiz kapanır.
 
-> Canlı uygulama: _yayın sonrası buraya eklenir_
+> Canlı uygulama: **https://takas-six.vercel.app**
+> Telefon: https://takas-six.vercel.app/#/play · Büyük ekran: https://takas-six.vercel.app/#/ · Ölçüm: https://takas-six.vercel.app/#/olcum
 > Ağ: Monad testnet (chainId 10143)
 
 ## Nasıl çalışır

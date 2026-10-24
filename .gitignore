@@ -9,3 +9,5 @@ dist/
 .vercel
 *.log
 .claude
+.vercel
+.env*

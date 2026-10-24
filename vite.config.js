@@ -2,13 +2,14 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
-import { loadEnv } from "./scripts/_env.mjs";
 
 // Yerel geliştirmede /api/* isteklerini Vercel'deki aynı işleyicilere yönlendirir (ayrı sunucu yok).
+// Env yükleyicisi yalnızca geliştirme sunucusunda içe aktarılır; üretim derlemesi scripts/ klasörüne bağlı değildir.
 function apiDev() {
   return {
     name: "takas-api-dev",
-    configureServer(server) {
+    async configureServer(server) {
+      const { loadEnv } = await import("./scripts/_env.mjs");
       loadEnv();
       process.env.HOST_TOKEN ||= "dev-token";
       server.middlewares.use(async (req, res, next) => {
