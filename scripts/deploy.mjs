@@ -44,8 +44,10 @@ function encode(abi, bytecode, args) {
 // --stress-only: yayındaki Takas'a dokunmadan yalnızca ölçüm kontratını yeniler.
 const prev = (await import("../src/deployment.js")).default;
 const stressOnly = process.argv.includes("--stress-only") && prev.takas;
+// --takas-only: ölçüm ve demo kontratlarına dokunmadan yalnızca canlı Takas'ı temiz bir kopyayla yeniler.
+const takasOnly = process.argv.includes("--takas-only") && prev.stress;
 const takas = stressOnly ? { address: prev.takas, block: prev.deployBlock } : await deploy("Takas", [FEE]);
-const stress = await deploy("TakasStress", [FEE]);
+const stress = takasOnly ? { address: prev.stress } : await deploy("TakasStress", [FEE]);
 writeFileSync(
   join(root, "src", "deployment.js"),
   `// scripts/deploy.mjs tarafından yazıldı.\nexport default ${JSON.stringify(

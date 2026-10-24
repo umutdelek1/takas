@@ -55,7 +55,7 @@ Ham veri: [`public/bench.json`](public/bench.json). Her rakam kaynağıyla etike
 **Tasarım: "Sayfa Defteri".** Hesaplar ve faturalar `mapping` yerine sıralı numaralarla, slot başına iki kayıt olacak şekilde yan yana tutulur. Monad'ın MIP-8 sayfa bazlı depolama fiyatlandırmasında aynı 128 slotluk sayfadaki erişimler çok ucuzdur. Monad'da darboğaz depolamadan hesaplamaya kaydığı için `settle()` bellekte işletme başına tek kelimelik paketli durumla, az döngüyle çalışır.
 
 ## Kontratlar (Monad Testnet, chainId 10143)
-- Takas: [`0x670f4f68c7993d13361a1ef6987f03f3c049930d`](https://testnet.monadexplorer.com/address/0x670f4f68c7993d13361a1ef6987f03f3c049930d)
+- Takas: [`0xaff5523654912af1397d546d47b52028cdf8317e`](https://testnet.monadexplorer.com/address/0xaff5523654912af1397d546d47b52028cdf8317e)
 - TakasStress (ölçüm, 10.000 işletmelik gerçek takas bu kontratta yapıldı): [`0x4e212ec77ef2d0a2588e0337da72b7cf41434492`](https://testnet.monadexplorer.com/address/0x4e212ec77ef2d0a2588e0337da72b7cf41434492)
 
 - Demo (`/#/demo`; canlı Takas'a dokunmayan, ayrı iki TakasStress örneği):
