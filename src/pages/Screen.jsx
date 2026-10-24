@@ -36,7 +36,7 @@ function useTween(target, ms = 900) {
   return v;
 }
 
-function DebtGraph({ state, fading, quiet }) {
+function DebtGraph({ state, fading, quiet, demo }) {
   const W = 840;
   const H = 560;
   const { nodes, edges, max, star, total } = useMemo(() => {
@@ -91,7 +91,11 @@ function DebtGraph({ state, fading, quiet }) {
   if (nodes.length === 0) {
     return (
       <div className="empty-graph">
-        {!quiet && <p className="muted">Henüz borç yok. Telefonundan şirketini kaydet, borç yaz.</p>}
+        {!quiet && (
+          <p className="muted">
+            {demo ? "Henüz açık fatura yok. Soldan bir senaryo seç; ağ birkaç saniyede kurulur." : "Henüz borç yok. Telefonundan şirketini kaydet, borç yaz."}
+          </p>
+        )}
       </div>
     );
   }
@@ -447,7 +451,7 @@ export function ScreenView({ demo = false }) {
         <div className="col">
           {error && !state && <div className="card err">Bağlantı kurulamadı: {error}</div>}
           <div className="graph-wrap">
-            {graphState ? <DebtGraph state={graphState} fading={phase === "fading" && fadeOn} quiet={phase !== "idle"} /> : <div className="empty-graph" />}
+            {graphState ? <DebtGraph state={graphState} fading={phase === "fading" && fadeOn} quiet={phase !== "idle"} demo={demo} /> : <div className="empty-graph" />}
             {phase === "done" && done && (
               <div className="done-card" role="status">
                 <h2>TAKAS TAMAM</h2>
