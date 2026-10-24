@@ -24,7 +24,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const rows = [];
 const t = async (name, fn) => {
   const s = Date.now();
-  const v = await fn();
+  let v;
+  try {
+    v = await fn();
+  } catch (e) {
+    console.log("HATA adımı:", name, "|", (e.shortMessage || e.message).slice(0, 160), "|", String(e.cause?.message || "").slice(0, 160));
+    throw e;
+  }
   rows.push([name, Date.now() - s]);
   return v;
 };

@@ -93,7 +93,8 @@ export default async function handler(req, res) {
     const b = req.body;
     const one = async (x) => {
       if (!x || typeof x.method !== "string") throw new HttpError(400, "Geçersiz JSON-RPC isteği.");
-      if (!ALLOWED.has(x.method)) throw new HttpError(403, "Bu yöntem kapalı.");
+      // Kapalı yöntem partiyi bozmasın: standart "Method not found" döner (viem kendi yoluna düşer).
+      if (!ALLOWED.has(x.method)) return { jsonrpc: "2.0", id: x.id ?? null, error: { code: -32601, message: "Method not found" } };
       const payload = { jsonrpc: "2.0", id: x.id ?? 1, method: x.method, params: x.params ?? [] };
       const r = x.method === "eth_sendRawTransaction" ? await broadcast(payload) : await forward(payload);
       return r?.json ?? { jsonrpc: "2.0", id: payload.id, error: { code: -32000, message: "RPC yanıt vermedi" } };
