@@ -85,7 +85,8 @@ export default function Bench() {
       <div className="topbar">
         <Brand />
         <nav className="links">
-          <a href="#/">Büyük ekran</a>
+          <a href="#/">Tanıtım</a>
+          <a href="#/ekran">Ekran</a>
           <a href="#/play">Telefon</a>
         </nav>
       </div>

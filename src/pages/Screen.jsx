@@ -12,7 +12,7 @@ const toMon = (wei) => Number(wei) / 1e18;
 const fmt = (n, d = 3) => n.toLocaleString("tr-TR", { maximumFractionDigits: d, minimumFractionDigits: 0 });
 
 const FADE_MS = 2200; // oklar sönerken sayaç akarak düşer
-const DONE_MS = 16000; // yeşil kart ekranda kalma süresi
+const DONE_MS = 16000; // büyük ekranda yeşil kartın kalma süresi (demoda kart kalıcıdır)
 
 /** Sayıyı hedef değere akıcı biçimde taşır. */
 function useTween(target, ms = 900) {
@@ -36,7 +36,7 @@ function useTween(target, ms = 900) {
   return v;
 }
 
-function DebtGraph({ state, fading, quiet, demo }) {
+function DebtGraph({ state, fading }) {
   const W = 840;
   const H = 560;
   const { nodes, edges, max, star, total } = useMemo(() => {
@@ -67,7 +67,7 @@ function DebtGraph({ state, fading, quiet, demo }) {
     const list = star ? [hub, ...sorted.filter((id) => id !== hub).slice(0, 59)] : sorted.slice(0, 60);
     const cx = W / 2;
     const cy = H / 2;
-    const r = star ? Math.min(W, H) / 2 - 46 : Math.min(W, H) / 2 - 78;
+    const r = star ? Math.min(W, H) / 2 - 46 : Math.min(W, H) / 2 - 70;
     const ring = star ? list.slice(1) : list;
     const pos = new Map(
       ring.map((id, i) => {
@@ -88,17 +88,6 @@ function DebtGraph({ state, fading, quiet, demo }) {
     };
   }, [state]);
 
-  if (nodes.length === 0) {
-    return (
-      <div className="empty-graph">
-        {!quiet && (
-          <p className="muted">
-            {demo ? "Henüz açık fatura yok. Soldan bir senaryo seç; ağ birkaç saniyede kurulur." : "Henüz borç yok. Telefonundan şirketini kaydet, borç yaz."}
-          </p>
-        )}
-      </div>
-    );
-  }
   const labels = nodes.length <= 24;
   const tiny = star && nodes.length > 24; // çok sayıda alacaklı: küçük noktalar, rozetsiz
   return (
@@ -113,16 +102,14 @@ function DebtGraph({ state, fading, quiet, demo }) {
           const dx = e.q.x - e.p.x;
           const dy = e.q.y - e.p.y;
           const len = Math.hypot(dx, dy) || 1;
-          const from = star ? 28 : 17;
-          const to = tiny ? 12 : 21;
+          const from = star ? 28 : 19;
+          const to = tiny ? 12 : 23;
           const sx = e.p.x + (dx / len) * from;
           const sy = e.p.y + (dy / len) * from;
           const ex = e.q.x - (dx / len) * to;
           const ey = e.q.y - (dy / len) * to;
           if (star) {
-            return (
-              <line key={i} x1={sx} y1={sy} x2={ex} y2={ey} stroke="#ff6b5b" strokeOpacity="0.7" strokeWidth="1.4" markerEnd="url(#ah)" />
-            );
+            return <line key={i} x1={sx} y1={sy} x2={ex} y2={ey} stroke="#ff6b5b" strokeOpacity="0.7" strokeWidth="1.4" markerEnd="url(#ah)" />;
           }
           // hafif eğri: karşılıklı borçlar üst üste binmesin
           const mx = (sx + ex) / 2 - (dy / len) * 22;
@@ -134,7 +121,7 @@ function DebtGraph({ state, fading, quiet, demo }) {
               fill="none"
               stroke="#ff6b5b"
               strokeOpacity="0.85"
-              strokeWidth={1.4 + (e.v / max) * 4}
+              strokeWidth={1.6 + (e.v / max) * 4}
               markerEnd="url(#ah)"
             />
           );
@@ -144,23 +131,23 @@ function DebtGraph({ state, fading, quiet, demo }) {
         const cos = Math.cos(n.a);
         return (
           <g key={n.id}>
-            <circle cx={n.x} cy={n.y} r={n.hub ? 26 : tiny ? 7 : 16} fill={n.hub ? "#7a62f5" : "#2f2948"} stroke="#4a3f7a" strokeWidth="1.5" />
+            <circle cx={n.x} cy={n.y} r={n.hub ? 28 : tiny ? 7 : 18} fill={n.hub ? "#7a62f5" : "#2f2948"} stroke="#4a3f7a" strokeWidth="1.5" />
             {(n.hub || !tiny) && (
-              <text x={n.x} y={n.y + 4} textAnchor="middle" fontSize={n.hub ? 14 : 11} fontWeight="700" fill="#f4f1ff">
+              <text x={n.x} y={n.y + 5} textAnchor="middle" fontSize={n.hub ? 15 : 13} fontWeight="700" fill="#f4f1ff">
                 {n.badge}
               </text>
             )}
             {n.hub && (
-              <text x={n.x} y={n.y + 46} textAnchor="middle" fontSize="12" fill="#a39cc4">
+              <text x={n.x} y={n.y + 50} textAnchor="middle" fontSize="15" fill="#a39cc4">
                 {n.name}
               </text>
             )}
             {labels && !n.hub && (
               <text
-                x={n.x + cos * 26}
-                y={n.y + Math.sin(n.a) * 26 + 4}
+                x={n.x + cos * 28}
+                y={n.y + Math.sin(n.a) * 28 + 5}
                 textAnchor={cos > 0.2 ? "start" : cos < -0.2 ? "end" : "middle"}
-                fontSize="12"
+                fontSize="15"
                 fill="#a39cc4"
               >
                 {n.name}
@@ -170,7 +157,7 @@ function DebtGraph({ state, fading, quiet, demo }) {
         );
       })}
       {tiny && (
-        <text x={W / 2} y={H - 8} textAnchor="middle" fontSize="12" fill="#a39cc4">
+        <text x={W / 2} y={H - 8} textAnchor="middle" fontSize="15" fill="#a39cc4">
           {total} maaş faturası · ilk {nodes.length - 1} çalışan gösteriliyor
         </text>
       )}
@@ -210,85 +197,134 @@ function Compare({ bench }) {
         </div>
         <div className="bar eth" style={{ width: `${(ethMax / top) * 100}%` }} />
       </div>
-      <p className="muted" style={{ fontSize: 12 }}>
-        İşlem başı gas sınırı {num(bench.ethereum.txGasCap)} (EIP-7825); sınırı aşan boyutta gerçek settle() düştü.{" "}
-        <a href="#/olcum">Ayrıntılar</a>
+      <p className="muted small">
+        İşlem başı sınır {num(bench.ethereum.txGasCap)} gas (EIP-7825). <a href="#/olcum">Ayrıntılar</a>
       </p>
     </div>
   );
 }
 
-/** Demo kontrolleri: iki senaryo (tedarik zinciri, maaş günü) ve TAKAS. Hepsi gerçek Monad testnet işlemi. */
-function DemoPanel({ state, refresh, scenario, setScenario }) {
-  const [busy, setBusy] = useState("");
-  const [msg, setMsg] = useState(null);
-
-  async function pick(next) {
-    setScenario(next);
-    setMsg(null);
-    setBusy(`seed:${next}`);
-    try {
-      // Seçilen ağda açık fatura yoksa senaryo kurulur; varsa yalnızca o ağa geçilir.
-      const st = await getState(`/api/demo/state?scenario=${next}`).catch(() => getState(`/api/demo/state?scenario=${next}`));
-      if (st.invoiceCount > 0) {
-        setMsg({ ok: true, text: "Ağ hazır. TAKAS'a bas." });
-      } else {
-        const r = await postJson("/api/demo/seed", { scenario: next });
-        setMsg({
-          ok: true,
-          text: next === "payroll" ? `1 şirket ve ${r.workersAdded} çalışan eklendi, ${r.invoicesAdded} maaş faturası yazıldı.` : `${r.merchantsAdded} işletme ve ${r.invoicesAdded} borç eklendi.`,
-          links: r.txs.map((t, i) => [r.txs.length > 1 ? `İşlem ${i + 1}` : "İşlemi gör", t.explorer]),
-        });
-      }
-      refresh();
-    } catch (e) {
-      setMsg({ ok: false, text: e.message });
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function settle() {
-    setBusy("settle");
-    setMsg(null);
-    try {
-      const r = await postJson("/api/demo/settle", { scenario });
-      setMsg({ ok: true, text: "Takas işlemi onaylandı.", links: [["İşlemi gör", r.explorer]] });
-      refresh();
-    } catch (e) {
-      setMsg({ ok: false, text: e.message });
-    } finally {
-      setBusy("");
-    }
-  }
-
-  const scenarios = [
-    ["supply", "Tedarik zinciri", "10 şirket, 20 borç"],
-    ["payroll", "Maaş günü", "1 şirket, 200 çalışan"],
-  ];
+/** Boş durum: ağ boşken ana alanı "Nasıl çalışır" anlatımı ve katılım için doldurur. */
+function HowItWorks({ qr, link, demo }) {
   return (
-    <section className="card" style={{ display: "grid", gap: 12 }}>
-      <h2 style={{ marginBottom: 0 }}>Tek tıkla dene</h2>
-      <p className="muted" style={{ fontSize: 14 }}>
-        1. Bir senaryo seç. 2. TAKAS'a bas ve borçların tek işlemde kapanmasını izle.
+    <div className="howto card">
+      <div className="howto-text">
+        <h2 className="howto-title">{demo ? "Soldan bir senaryo seç" : "Nasıl çalışır"}</h2>
+        <ol className="howto-steps">
+          <li>
+            <b>Şirketini kaydet.</b> <span className="muted">Teminat yatır.</span>
+          </li>
+          <li>
+            <b>Borcunu yaz.</b> <span className="muted">Borçlu kendi borcunu yazar.</span>
+          </li>
+          <li>
+            <b>TAKAS.</b> <span className="muted">Herkes sadece net borcunu öder; teminatı yetmeyen sonraki tura kalır.</span>
+          </li>
+        </ol>
+        {demo && <p className="muted">Senaryo seçince zincire sentetik işletmeler ve borçlar yazılır; ağ birkaç saniyede burada belirir.</p>}
+      </div>
+      {!demo && (
+        <div className="howto-qr">
+          {qr ? <img className="qr" src={qr} alt="Katılmak için QR kodunu okut" /> : <div className="qr" style={{ aspectRatio: "1" }} />}
+          <p className="howto-qr-cap">Telefonla okut, şirketini kaydet</p>
+          <p className="muted num small">{link}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Yeşil sonuç kartı. Demoda "Yeniden kur" ile aynı senaryo baştan kurulur. */
+function ResultCard({ result, onRebuild, busy, overlay }) {
+  const s = result.stats;
+  return (
+    <div className={`done-card ${overlay ? "overlay" : ""}`} role="status">
+      <h2>TAKAS TAMAM</h2>
+      {result.scenario === "payroll" ? (
+        <>
+          <div className="done-headline num">{num(s.invoices)} maaş tek işlemde ödendi</div>
+          <div className="pair">
+            <div>
+              <small>Toplam ödenen tutar</small>
+              <div className="n num">
+                {fmt(toMon(s.grossWei))} <span className="unit">MON</span>
+              </div>
+            </div>
+            <div>
+              <small>Kullanılan gas</small>
+              <div className="n num">{num(s.gasUsed)}</div>
+            </div>
+          </div>
+          <p className="done-line">
+            {num(s.participants)} hesap, tek settle() işlemi. TAKAS kazancı {monLabel(s.feesWei, 4)}.{" "}
+            <a href={result.explorer} target="_blank" rel="noreferrer">
+              İşlemi gör
+            </a>
+          </p>
+        </>
+      ) : (
+        <>
+          <div className="pair">
+            <div>
+              <small>İşletmelerin nakit tasarrufu</small>
+              <div className="n num">
+                {fmt(toMon(s.savedWei))} <span className="unit">MON</span>
+              </div>
+            </div>
+            <div>
+              <small>TAKAS kazancı</small>
+              <div className="n num">
+                {fmt(toMon(s.feesWei), 4)} <span className="unit">MON</span>
+              </div>
+            </div>
+          </div>
+          <p className="done-line">
+            {num(s.invoices)} fatura, {num(s.participants)} işletme: {monLabel(s.grossWei)} borç yerine yalnızca {monLabel(s.cashWei)} nakit el
+            değiştirdi.{" "}
+            <a href={result.explorer} target="_blank" rel="noreferrer">
+              İşlemi gör
+            </a>
+          </p>
+        </>
+      )}
+      {onRebuild && (
+        <button className="btn done-btn" disabled={busy} onClick={onRebuild}>
+          {busy ? (
+            <>
+              <span className="spinner" />
+              Kuruluyor…
+            </>
+          ) : (
+            "Yeniden kur"
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
+const SCENARIOS = [
+  ["supply", "Tedarik zinciri", "10 şirket, 20 borç"],
+  ["payroll", "Maaş günü", "1 şirket, 200 çalışan"],
+];
+
+/** Demo kontrolleri: her adımın üstünde ne olacağı yazar. Hepsi gerçek Monad testnet işlemi. */
+function DemoPanel({ state, scenario, busy, msg, onPick, onSettle }) {
+  return (
+    <section className="card demo-panel">
+      <p className="demo-step">
+        <span className="step-dot num">1</span> Senaryo seç → zincire gerçek işletmeler ve borçlar yazılır
       </p>
-      {scenarios.map(([key, title, sub]) => (
-        <button
-          key={key}
-          className={`scenario ${scenario === key ? "on" : ""}`}
-          disabled={!!busy}
-          onClick={() => pick(key)}
-        >
-          <b>{busy === `seed:${key}` ? "Hazırlanıyor…" : title}</b>
+      {SCENARIOS.map(([key, title, sub]) => (
+        <button key={key} className={`scenario ${scenario === key ? "on" : ""}`} disabled={!!busy} onClick={() => onPick(key)}>
+          <b>{busy === `seed:${key}` ? "Kuruluyor…" : title}</b>
           <span className="muted">{sub}</span>
         </button>
       ))}
-      <button
-        className="btn big block"
-        style={{ background: "var(--credit)", color: "var(--ink-on-green)" }}
-        disabled={!!busy || !state || state.invoiceCount === 0}
-        onClick={settle}
-      >
+      <p className="demo-step">
+        <span className="step-dot num">2</span> TAKAS'a bas → tek işlemde netleşir
+      </p>
+      <button className="btn big block takas-btn" disabled={!!busy || !state || state.invoiceCount === 0} onClick={onSettle}>
         {busy === "settle" ? (
           <>
             <span className="spinner" />
@@ -298,8 +334,11 @@ function DemoPanel({ state, refresh, scenario, setScenario }) {
           "TAKAS"
         )}
       </button>
-      {msg && (
-        <p className={msg.ok ? "ok" : "err"} style={{ fontSize: 14 }}>
+      <p className="demo-step">
+        <span className="step-dot num">3</span> Sonuç
+      </p>
+      {msg ? (
+        <p className={msg.ok ? "ok small" : "err small"}>
           {msg.text}{" "}
           {msg.links?.map(([label, href]) => (
             <span key={href}>
@@ -309,10 +348,13 @@ function DemoPanel({ state, refresh, scenario, setScenario }) {
             </span>
           ))}
         </p>
+      ) : (
+        <p className="muted small">Takastan sonra sonuç kartı ortada kalır.</p>
       )}
     </section>
   );
 }
+
 export function ScreenView({ demo = false }) {
   const [scenario, setScenario] = useState("supply");
   const { state, error, refresh } = useTakasState(1500, demo ? `/api/demo/state?scenario=${scenario}` : "/api/state");
@@ -326,6 +368,9 @@ export function ScreenView({ demo = false }) {
   const [dying, setDying] = useState(null);
   const [fadeOn, setFadeOn] = useState(false);
   const [done, setDone] = useState(null);
+
+  const [busy, setBusy] = useState("");
+  const [msg, setMsg] = useState(null);
 
   useEffect(() => {
     QRCode.toDataURL(link, { margin: 1, width: 560, color: { dark: "#120f1d", light: "#ffffff" } })
@@ -360,13 +405,62 @@ export function ScreenView({ demo = false }) {
       setPhase("done");
       setDone({ ...state.lastSettle, scenario: state.scenario });
     });
-    after(FADE_MS + DONE_MS, () => {
-      setPhase("idle");
-      setDying(null);
-      setDone(null);
-    });
-  }, [state]);
+    if (!demo) {
+      after(FADE_MS + DONE_MS, () => {
+        setPhase("idle");
+        setDying(null);
+        setDone(null);
+      });
+    }
+  }, [state, demo]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  // ---- demo işlemleri ----
+  async function pick(next) {
+    setScenario(next);
+    setMsg(null);
+    setBusy(`seed:${next}`);
+    try {
+      // Seçilen ağda açık fatura yoksa senaryo kurulur; varsa yalnızca o ağa geçilir.
+      const path = `/api/demo/state?scenario=${next}`;
+      const st = await getState(path).catch(() => getState(path));
+      if (st.invoiceCount > 0) {
+        setMsg({ ok: true, text: "Ağ hazır. TAKAS'a bas." });
+      } else {
+        const r = await postJson("/api/demo/seed", { scenario: next });
+        setPhase("idle");
+        setDone(null);
+        setDying(null);
+        setMsg({
+          ok: true,
+          text:
+            next === "payroll"
+              ? `1 şirket ve ${r.workersAdded} çalışan eklendi, ${r.invoicesAdded} maaş faturası yazıldı.`
+              : `${r.merchantsAdded} işletme ve ${r.invoicesAdded} borç eklendi.`,
+          links: r.txs.map((t, i) => [r.txs.length > 1 ? `İşlem ${i + 1}` : "İşlemi gör", t.explorer]),
+        });
+      }
+      refresh();
+    } catch (e) {
+      setMsg({ ok: false, text: e.message });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function settle() {
+    setBusy("settle");
+    setMsg(null);
+    try {
+      const r = await postJson("/api/demo/settle", { scenario });
+      setMsg({ ok: true, text: "Takas işlemi onaylandı.", links: [["İşlemi gör", r.explorer]] });
+      refresh();
+    } catch (e) {
+      setMsg({ ok: false, text: e.message });
+    } finally {
+      setBusy("");
+    }
+  }
 
   const openTotal = state ? state.invoices.reduce((s, i) => s + Number(i.amountWei), 0) / 1e18 : 0;
   const cash = state ? toMon(state.preview.cashWei) : 0;
@@ -378,14 +472,43 @@ export function ScreenView({ demo = false }) {
   const tSaved = useTween(cumSaved, 1400);
   const tTreasury = useTween(treasury, 1400);
   const last = state?.lastSettle;
-  const graphState = phase === "fading" && dying ? dying : state;
+  const hasOpen = !!state && state.invoices.length > 0;
+
+  // ---- orta alan: ağ, sonuç kartı ya da anlatım; boş kutu yok ----
+  let center;
+  if (!state) {
+    center = <div className="howto card muted">{error ? `Bağlantı kurulamadı: ${error}` : "Yükleniyor…"}</div>;
+  } else if (phase === "fading" && dying) {
+    center = <DebtGraph state={dying} fading={fadeOn} />;
+  } else if (phase === "done" && done && !(demo && hasOpen)) {
+    center = (
+      <div className="stage">
+        {dying && <DebtGraph state={dying} fading />}
+        <ResultCard result={done} overlay={!!dying} onRebuild={demo ? () => pick(scenario) : null} busy={busy.startsWith("seed")} />
+      </div>
+    );
+  } else if (hasOpen) {
+    center = <DebtGraph state={state} />;
+  } else if (demo && last) {
+    center = (
+      <div className="stage">
+        <ResultCard result={{ ...last, scenario: state.scenario }} onRebuild={() => pick(scenario)} busy={busy.startsWith("seed")} />
+      </div>
+    );
+  } else {
+    center = <HowItWorks qr={qr} link={link} demo={demo} />;
+  }
+
+  const showSideQr = !demo && (hasOpen || phase !== "idle");
+  const contract = state?.contract ?? CONTRACT;
 
   return (
     <div className="screen">
       <div className="topbar">
         <Brand />
         <nav className="links">
-          {demo ? <a href="#/">Canlı ekran</a> : <a href="#/demo">Demo</a>}
+          <a href="#/">Tanıtım</a>
+          {demo ? <a href="#/ekran">Ekran</a> : <a href="#/demo">Demo</a>}
           <a href="#/play">Telefon</a>
           <a href="#/host">Host</a>
           <a href="#/olcum">Ölçüm</a>
@@ -399,22 +522,16 @@ export function ScreenView({ demo = false }) {
 
       <div className="screen-grid">
         <div className="col">
-          {demo ? (
-            <DemoPanel state={state} refresh={refresh} scenario={scenario} setScenario={setScenario} />
-          ) : (
-            <section className="card" style={{ textAlign: "center" }}>
-              <h2>Katıl</h2>
+          {demo && <DemoPanel state={state} scenario={scenario} busy={busy} msg={msg} onPick={pick} onSettle={settle} />}
+          {showSideQr && (
+            <section className="card side-qr">
               {qr ? <img className="qr" src={qr} alt="Katılmak için QR kodunu okut" /> : <div className="qr" style={{ aspectRatio: "1" }} />}
-              <p style={{ marginTop: 10, fontWeight: 600 }}>Okut, şirketini kaydet</p>
-              <p className="muted num" style={{ fontSize: 12, wordBreak: "break-all" }}>
-                {link}
+              <p>
+                <b>Katıl:</b> okut, şirketini kaydet
               </p>
-              <a className="btn ghost block" style={{ marginTop: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }} href="#/demo">
-                Tek tıkla dene: /#/demo
-              </a>
             </section>
           )}
-          <section className="card">
+          <section className="card stats-card">
             <h2>Ağ</h2>
             <div className="stat-lines">
               <div className="row">
@@ -434,83 +551,22 @@ export function ScreenView({ demo = false }) {
                 <b className="num">{state ? monLabel(state.feeWei, 5) : "…"}</b>
               </div>
             </div>
-            <p className="muted" style={{ fontSize: 12, marginTop: 12 }}>
-              Şirket adları kurgusaldır.
-            </p>
           </section>
-          <section className="card fact">
-            <h2>Neden TAKAS?</h2>
-            <div className="fact-num num debt">270 milyar TL</div>
-            <p style={{ marginTop: 6 }}>karşılıksız çek</p>
-            <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>
-              2026 ilk 9 ay, TBB Risk Merkezi
-            </p>
-          </section>
+          {!demo && (
+            <section className="card fact">
+              <div className="fact-num num debt">270 milyar TL</div>
+              <p>karşılıksız çek</p>
+              <p className="muted small">2026 ilk 9 ay, TBB Risk Merkezi</p>
+            </section>
+          )}
         </div>
 
-        <div className="col">
-          {error && !state && <div className="card err">Bağlantı kurulamadı: {error}</div>}
-          <div className="graph-wrap">
-            {graphState ? <DebtGraph state={graphState} fading={phase === "fading" && fadeOn} quiet={phase !== "idle"} demo={demo} /> : <div className="empty-graph" />}
-            {phase === "done" && done && (
-              <div className="done-card" role="status">
-                <h2>TAKAS TAMAM</h2>
-                {done.scenario === "payroll" ? (
-                  <>
-                    <div className="n num" style={{ marginBottom: 16, fontSize: 30, whiteSpace: "normal" }}>
-                      {num(done.stats.invoices)} maaş tek işlemde ödendi
-                    </div>
-                    <div className="pair">
-                      <div>
-                        <small>Toplam ödenen tutar</small>
-                        <div className="n num">
-                          {fmt(toMon(done.stats.grossWei))} <span className="unit">MON</span>
-                        </div>
-                      </div>
-                      <div>
-                        <small>Kullanılan gas</small>
-                        <div className="n num">{num(done.stats.gasUsed)}</div>
-                      </div>
-                    </div>
-                    <p style={{ marginTop: 16, fontWeight: 500 }}>
-                      {num(done.stats.participants)} hesap, tek settle() işlemi. TAKAS kazancı {monLabel(done.stats.feesWei, 4)}.{" "}
-                      <a href={done.explorer} target="_blank" rel="noreferrer">
-                        İşlemi gör
-                      </a>
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <div className="pair">
-                      <div>
-                        <small>İşletmelerin nakit tasarrufu</small>
-                        <div className="n num">
-                          {fmt(toMon(done.stats.savedWei))} <span className="unit">MON</span>
-                        </div>
-                      </div>
-                      <div>
-                        <small>TAKAS kazancı</small>
-                        <div className="n num">
-                          {fmt(toMon(done.stats.feesWei), 4)} <span className="unit">MON</span>
-                        </div>
-                      </div>
-                    </div>
-                    <p style={{ marginTop: 16, fontWeight: 500 }}>
-                      {num(done.stats.invoices)} fatura, {num(done.stats.participants)} işletme: {monLabel(done.stats.grossWei)} borç yerine yalnızca{" "}
-                      {monLabel(done.stats.cashWei)} nakit el değiştirdi.{" "}
-                      <a href={done.explorer} target="_blank" rel="noreferrer">
-                        İşlemi gör
-                      </a>
-                    </p>
-                  </>
-                )}
-              </div>            )}
-          </div>
-          <section className="card">
-            <h2>Son takas</h2>
+        <div className="col center-col">
+          <div className="center">{center}</div>
+          <section className="card last-line">
             {last ? (
               <div className="row" style={{ flexWrap: "wrap" }}>
-                <b>Takas #{last.session}</b>
+                <b>Son takas #{last.session}</b>
                 <span className="num">
                   {num(last.stats.invoices)} fatura · {num(last.stats.participants)} işletme · {monLabel(last.stats.cashWei)} nakit
                 </span>
@@ -519,7 +575,7 @@ export function ScreenView({ demo = false }) {
                 </a>
               </div>
             ) : (
-              <p className="muted">Henüz takas yapılmadı.</p>
+              <span className="muted">Henüz takas yapılmadı.</span>
             )}
           </section>
         </div>
@@ -552,11 +608,12 @@ export function ScreenView({ demo = false }) {
             <h2>20.000 fatura, tek işlem</h2>
             <Compare bench={bench} />
           </section>
-          <p className="muted" style={{ fontSize: 12 }}>
-            Kontrat:{" "}
-            <a href={`${EXPLORER}/address/${state?.contract ?? CONTRACT}`} target="_blank" rel="noreferrer" className="num">
-              {shortAddr(state?.contract ?? CONTRACT)}
-            </a>
+          <p className="muted small">
+            {demo ? "Demo kontratı" : "Kontrat"}:{" "}
+            <a href={`${EXPLORER}/address/${contract}`} target="_blank" rel="noreferrer" className="num">
+              {shortAddr(contract)}
+            </a>{" "}
+            · şirket adları kurgusaldır
           </p>
         </div>
       </div>

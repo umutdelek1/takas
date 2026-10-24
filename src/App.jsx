@@ -4,6 +4,7 @@ import Play from "./pages/Play.jsx";
 import Host from "./pages/Host.jsx";
 import Bench from "./pages/Bench.jsx";
 import Demo from "./pages/Demo.jsx";
+import Landing from "./pages/Landing.jsx";
 
 const routeOf = () => {
   const h = location.hash.replace(/^#\/?/, "");
@@ -22,5 +23,6 @@ export default function App() {
   if (route === "host") return <Host />;
   if (route === "olcum") return <Bench />;
   if (route === "demo") return <Demo />;
-  return <Screen />;
+  if (route === "ekran") return <Screen />;
+  return <Landing />;
 }
