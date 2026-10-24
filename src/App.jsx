@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Screen from "./pages/Screen.jsx";
 import Play from "./pages/Play.jsx";
-import Host from "./pages/Host.jsx";
 import Bench from "./pages/Bench.jsx";
 import Demo from "./pages/Demo.jsx";
 import Landing from "./pages/Landing.jsx";
@@ -20,7 +19,8 @@ export default function App() {
   }, []);
 
   if (route === "play") return <Play />;
-  if (route === "host") return <Host />;
+  // Host kontrolleri büyük ekranda: eski #/host bağlantısı da ekrana gider.
+  if (route === "host") return <Screen />;
   if (route === "olcum") return <Bench />;
   if (route === "demo") return <Demo />;
   if (route === "ekran") return <Screen />;

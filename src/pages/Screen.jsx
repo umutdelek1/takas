@@ -359,6 +359,113 @@ function DemoPanel({ state, scenario, busy, msg, onPick, onSettle }) {
   );
 }
 
+const TOKEN_KEY = "takas.hostToken";
+
+/** Büyük ekrandaki takas kartı: host anahtarı bir kez girilir, sonra TAKAS düğmesi kalır. */
+function HostPanel({ state, refresh }) {
+  const [token, setToken] = useState(() => {
+    try {
+      return localStorage.getItem(TOKEN_KEY) || "";
+    } catch {
+      return "";
+    }
+  });
+  const [draft, setDraft] = useState("");
+  const [editing, setEditing] = useState(!token);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  const save = (v) => {
+    const clean = v.trim();
+    setToken(clean);
+    try {
+      localStorage.setItem(TOKEN_KEY, clean);
+    } catch {
+      /* kalıcı değil */
+    }
+  };
+
+  async function settle() {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const r = await postJson("/api/settle", {}, { "x-host-token": token });
+      setMsg({ ok: true, text: "Takas işlemi onaylandı.", href: r.explorer });
+      refresh();
+    } catch (e) {
+      setMsg({ ok: false, text: e.message });
+      if (/anahtar/i.test(e.message)) setEditing(true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <section className="card host-panel">
+        <h2>Takas</h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!draft.trim()) return;
+            save(draft);
+            setDraft("");
+            setEditing(false);
+            setMsg(null);
+          }}
+        >
+          <input
+            type="password"
+            value={draft}
+            placeholder="Host anahtarını yapıştır"
+            onChange={(e) => setDraft(e.target.value)}
+            autoComplete="off"
+            aria-label="Host anahtarı"
+          />
+          <button className="btn block" style={{ marginTop: 10 }} disabled={!draft.trim()}>
+            Kaydet
+          </button>
+        </form>
+        {msg && !msg.ok && (
+          <p className="err small" style={{ marginTop: 8 }}>
+            {msg.text}
+          </p>
+        )}
+      </section>
+    );
+  }
+
+  const nothing = !state || state.invoiceCount === 0;
+  return (
+    <section className="card host-panel">
+      <button className="btn big block takas-btn" disabled={busy || nothing} onClick={settle}>
+        {busy ? (
+          <>
+            <span className="spinner" />
+            Takas yapılıyor…
+          </>
+        ) : (
+          "TAKAS"
+        )}
+      </button>
+      {nothing && <p className="muted small" style={{ marginTop: 8 }}>Açık fatura yok.</p>}
+      {msg && (
+        <p className={msg.ok ? "ok small" : "err small"} style={{ marginTop: 8 }}>
+          {msg.text}{" "}
+          {msg.href && (
+            <a href={msg.href} target="_blank" rel="noreferrer">
+              İşlemi gör
+            </a>
+          )}
+        </p>
+      )}
+      <button className="link-btn" onClick={() => setEditing(true)}>
+        Anahtarı değiştir
+      </button>
+    </section>
+  );
+}
+
 export function ScreenView({ demo = false }) {
   const [scenario, setScenario] = useState("supply");
   const { state, error, refresh } = useTakasState(1500, demo ? `/api/demo/state?scenario=${scenario}` : "/api/state");
@@ -514,7 +621,6 @@ export function ScreenView({ demo = false }) {
           <a href="#/">Tanıtım</a>
           {demo ? <a href="#/ekran">Ekran</a> : <a href="#/demo">Demo</a>}
           <a href="#/play">Telefon</a>
-          <a href="#/host">Host</a>
           <a href="#/olcum">Ölçüm</a>
         </nav>
         <WalletButton />
@@ -528,6 +634,7 @@ export function ScreenView({ demo = false }) {
       <div className="screen-grid">
         <div className="col">
           {demo && <DemoPanel state={state} scenario={scenario} busy={busy} msg={msg} onPick={pick} onSettle={settle} />}
+          {!demo && <HostPanel state={state} refresh={refresh} />}
           {showSideQr && (
             <section className="card side-qr">
               {qr ? <img className="qr" src={qr} alt="Katılmak için QR kodunu okut" /> : <div className="qr" style={{ aspectRatio: "1" }} />}
