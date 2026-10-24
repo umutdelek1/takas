@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-24T09:37:04.389Z",
+  "generatedAt": "2026-10-24T10:02:14.232Z",
   "ethereum": {
     "chainId": 31337,
     "hardfork": "prague",
@@ -11,49 +11,56 @@
         "invoices": 1000,
         "gasEstimate": "3587735",
         "gasPerMerchant": 7175,
-        "fitsCap": true
+        "fitsCap": true,
+        "kind": "tahmin"
       },
       {
         "merchants": 1000,
         "invoices": 2000,
         "gasEstimate": "7054663",
         "gasPerMerchant": 7055,
-        "fitsCap": true
+        "fitsCap": true,
+        "kind": "tahmin"
       },
       {
         "merchants": 2000,
         "invoices": 4000,
         "gasEstimate": "14044362",
         "gasPerMerchant": 7022,
-        "fitsCap": true
+        "fitsCap": true,
+        "kind": "tahmin"
       },
       {
         "merchants": 2500,
         "invoices": 5000,
         "gasEstimate": "17322976",
         "gasPerMerchant": 6929,
-        "fitsCap": false
+        "fitsCap": false,
+        "kind": "tahmin"
       },
       {
         "merchants": 3000,
         "invoices": 6000,
         "gasEstimate": "20575480",
         "gasPerMerchant": 6858,
-        "fitsCap": false
+        "fitsCap": false,
+        "kind": "tahmin"
       },
       {
         "merchants": 5000,
         "invoices": 10000,
         "gasEstimate": "34810234",
         "gasPerMerchant": 6962,
-        "fitsCap": false
+        "fitsCap": false,
+        "kind": "tahmin"
       },
       {
         "merchants": 10000,
         "invoices": 20000,
         "gasEstimate": "70004263",
         "gasPerMerchant": 7000,
-        "fitsCap": false
+        "fitsCap": false,
+        "kind": "tahmin"
       }
     ],
     "overLimitSettle": {
@@ -63,13 +70,25 @@
       "gasEstimateNeeded": "17322976",
       "status": "reverted",
       "receiptGasUsed": "16777216",
-      "note": "Gas yetmedi: işlem düştü, hiçbir esnaf takasa girmedi."
+      "note": "Gas yetmedi: işlem düştü, hiçbir esnaf takasa girmedi.",
+      "kind": "ölçülen"
     },
     "uncappedSettle": {
       "merchants": 10000,
       "status": "success",
       "receiptGasUsed": "70004263",
-      "gasUsedEvent": "69978729"
+      "gasUsedEvent": "69978729",
+      "kind": "ölçülen"
+    },
+    "derived": {
+      "kind": "hesaplanan",
+      "maxMerchantsPerTx": 2421,
+      "basis": "işlem başı gas sınırı 16777216 / esnaf başına 6929 gas (sınırı ilk aşan ölçüm noktası)"
+    },
+    "kinds": {
+      "ölçülen": "gerçek işlem makbuzu ve Settled olayı",
+      "tahmin": "eth_estimateGas, işlem gönderilmedi",
+      "hesaplanan": "ölçülen/tahmin değerlerden türetildi"
     }
   },
   "monad": {
@@ -84,7 +103,8 @@
         "ok": true,
         "gasEstimate": "1466068",
         "gasPerMerchant": 2932,
-        "fitsBlock": true
+        "fitsBlock": true,
+        "kind": "tahmin"
       },
       {
         "merchants": 2000,
@@ -92,7 +112,8 @@
         "ok": true,
         "gasEstimate": "5570695",
         "gasPerMerchant": 2785,
-        "fitsBlock": true
+        "fitsBlock": true,
+        "kind": "tahmin"
       },
       {
         "merchants": 5000,
@@ -100,7 +121,8 @@
         "ok": true,
         "gasEstimate": "13727411",
         "gasPerMerchant": 2745,
-        "fitsBlock": true
+        "fitsBlock": true,
+        "kind": "tahmin"
       },
       {
         "merchants": 10000,
@@ -108,7 +130,8 @@
         "ok": true,
         "gasEstimate": "27212368",
         "gasPerMerchant": 2721,
-        "fitsBlock": true
+        "fitsBlock": true,
+        "kind": "tahmin"
       }
     ],
     "realSettle": {
@@ -120,9 +143,15 @@
       "gasLimit": "28592986",
       "receiptGasUsed": "28592986",
       "gasUsedEvent": "26971768",
-      "block": "73779786"
+      "block": "73779786",
+      "kind": "ölçülen"
     },
     "stoppedBecause": null,
-    "spentMon": "34.33887579"
+    "spentMon": "34.33887579",
+    "kinds": {
+      "ölçülen": "gerçek işlem makbuzu ve Settled olayı",
+      "tahmin": "eth_estimateGas, işlem gönderilmedi",
+      "hesaplanan": "ölçülen/tahmin değerlerden türetildi"
+    }
   }
 }
