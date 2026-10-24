@@ -39,7 +39,7 @@ function useTween(target, ms = 900) {
 function DebtGraph({ state, fading, quiet }) {
   const W = 840;
   const H = 560;
-  const { nodes, edges, max } = useMemo(() => {
+  const { nodes, edges, max, star, total } = useMemo(() => {
     const byAddr = new Map(state.members.map((m) => [lc(m.address), m]));
     const byId = new Map(state.members.map((m) => [m.id, m]));
     const agg = new Map();
@@ -58,16 +58,24 @@ function DebtGraph({ state, fading, quiet }) {
       ids.add(cm.id);
       e.push({ d: dm.id, c: cm.id, v: Number(v) });
     }
-    const list = [...ids].sort((a, b) => a - b).slice(0, 60);
+    // Yıldız düzeni (maaş günü): tüm faturalar tek borçludan çıkıyorsa borçlu ortada, alacaklılar halkada.
+    const outDeg = new Map();
+    for (const x of e) outDeg.set(x.d, (outDeg.get(x.d) || 0) + 1);
+    const hub = [...outDeg].find(([, n]) => n === e.length && e.length >= 8)?.[0];
+    const star = hub !== undefined;
+    const sorted = [...ids].sort((a, b) => a - b);
+    const list = star ? [hub, ...sorted.filter((id) => id !== hub).slice(0, 59)] : sorted.slice(0, 60);
     const cx = W / 2;
     const cy = H / 2;
-    const r = Math.min(W, H) / 2 - 78;
+    const r = star ? Math.min(W, H) / 2 - 46 : Math.min(W, H) / 2 - 78;
+    const ring = star ? list.slice(1) : list;
     const pos = new Map(
-      list.map((id, i) => {
-        const a = (i / list.length) * Math.PI * 2 - Math.PI / 2;
+      ring.map((id, i) => {
+        const a = (i / ring.length) * Math.PI * 2 - Math.PI / 2;
         return [id, { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a), a }];
       }),
     );
+    if (star) pos.set(hub, { x: cx, y: cy, a: 0, hub: true });
     return {
       nodes: list.map((id) => {
         const m = byId.get(id);
@@ -75,6 +83,8 @@ function DebtGraph({ state, fading, quiet }) {
       }),
       edges: e.filter((x) => pos.has(x.d) && pos.has(x.c)).map((x) => ({ ...x, p: pos.get(x.d), q: pos.get(x.c) })),
       max: Math.max(1, ...e.map((x) => x.v)),
+      star,
+      total: e.length,
     };
   }, [state]);
 
@@ -86,6 +96,7 @@ function DebtGraph({ state, fading, quiet }) {
     );
   }
   const labels = nodes.length <= 24;
+  const tiny = star && nodes.length > 24; // çok sayıda alacaklı: küçük noktalar, rozetsiz
   return (
     <svg className="graph" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="İşletmeler arası borç ağı">
       <defs>
@@ -98,10 +109,17 @@ function DebtGraph({ state, fading, quiet }) {
           const dx = e.q.x - e.p.x;
           const dy = e.q.y - e.p.y;
           const len = Math.hypot(dx, dy) || 1;
-          const sx = e.p.x + (dx / len) * 17;
-          const sy = e.p.y + (dy / len) * 17;
-          const ex = e.q.x - (dx / len) * 21;
-          const ey = e.q.y - (dy / len) * 21;
+          const from = star ? 28 : 17;
+          const to = tiny ? 12 : 21;
+          const sx = e.p.x + (dx / len) * from;
+          const sy = e.p.y + (dy / len) * from;
+          const ex = e.q.x - (dx / len) * to;
+          const ey = e.q.y - (dy / len) * to;
+          if (star) {
+            return (
+              <line key={i} x1={sx} y1={sy} x2={ex} y2={ey} stroke="#ff6b5b" strokeOpacity="0.7" strokeWidth="1.4" markerEnd="url(#ah)" />
+            );
+          }
           // hafif eğri: karşılıklı borçlar üst üste binmesin
           const mx = (sx + ex) / 2 - (dy / len) * 22;
           const my = (sy + ey) / 2 + (dx / len) * 22;
@@ -122,11 +140,18 @@ function DebtGraph({ state, fading, quiet }) {
         const cos = Math.cos(n.a);
         return (
           <g key={n.id}>
-            <circle cx={n.x} cy={n.y} r={16} fill="#2f2948" stroke="#4a3f7a" strokeWidth="1.5" />
-            <text x={n.x} y={n.y + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#f4f1ff">
-              {n.badge}
-            </text>
-            {labels && (
+            <circle cx={n.x} cy={n.y} r={n.hub ? 26 : tiny ? 7 : 16} fill={n.hub ? "#7a62f5" : "#2f2948"} stroke="#4a3f7a" strokeWidth="1.5" />
+            {(n.hub || !tiny) && (
+              <text x={n.x} y={n.y + 4} textAnchor="middle" fontSize={n.hub ? 14 : 11} fontWeight="700" fill="#f4f1ff">
+                {n.badge}
+              </text>
+            )}
+            {n.hub && (
+              <text x={n.x} y={n.y + 46} textAnchor="middle" fontSize="12" fill="#a39cc4">
+                {n.name}
+              </text>
+            )}
+            {labels && !n.hub && (
               <text
                 x={n.x + cos * 26}
                 y={n.y + Math.sin(n.a) * 26 + 4}
@@ -140,6 +165,11 @@ function DebtGraph({ state, fading, quiet }) {
           </g>
         );
       })}
+      {tiny && (
+        <text x={W / 2} y={H - 8} textAnchor="middle" fontSize="12" fill="#a39cc4">
+          {total} maaş faturası · ilk {nodes.length - 1} çalışan gösteriliyor
+        </text>
+      )}
     </svg>
   );
 }
@@ -195,7 +225,7 @@ function DemoPanel({ state, refresh, scenario, setScenario }) {
     setBusy(`seed:${next}`);
     try {
       // Seçilen ağda açık fatura yoksa senaryo kurulur; varsa yalnızca o ağa geçilir.
-      const st = await getState(`/api/demo/state?scenario=${next}`);
+      const st = await getState(`/api/demo/state?scenario=${next}`).catch(() => getState(`/api/demo/state?scenario=${next}`));
       if (st.invoiceCount > 0) {
         setMsg({ ok: true, text: "Ağ hazır. TAKAS'a bas." });
       } else {
