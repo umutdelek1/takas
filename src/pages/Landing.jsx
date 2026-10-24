@@ -5,6 +5,7 @@ import { num, shortAddr } from "../lib/format.js";
 import deployment from "../deployment.js";
 import { Brand } from "./Brand.jsx";
 import { Tag } from "./Tag.jsx";
+import { Guilloche, Stamp } from "./Ornament.jsx";
 
 const GITHUB = "https://github.com/umutdelek1/takas";
 
@@ -64,13 +65,14 @@ function LoopExample() {
 
   return (
     <div className="loop">
+      <Stamp />
       <svg viewBox="0 0 420 370" role="img" aria-label="Üç şirketlik borç döngüsünün takası">
         <defs>
           <marker id="lah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0 0L10 5L0 10z" fill="#F87171" />
+            <path d="M0 0L10 5L0 10z" fill="#FF8A7A" />
           </marker>
           <marker id="lahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0 0L10 5L0 10z" fill="#34D399" />
+            <path d="M0 0L10 5L0 10z" fill="#6EE7B7" />
           </marker>
         </defs>
         <g style={{ opacity: settling ? 0 : 1, transition: "opacity 1.2s ease" }}>
@@ -78,7 +80,7 @@ function LoopExample() {
             const r = arrow(a, b, -26);
             return (
               <g key={a + b}>
-                <path d={r.d} fill="none" stroke="#F87171" strokeWidth={1.2 + v / 50} markerEnd="url(#lah)" />
+                <path d={r.d} fill="none" stroke="#FF8A7A" strokeWidth={1.2 + v / 50} markerEnd="url(#lah)" />
                 <text x={r.lx} y={r.ly} textAnchor="middle" className="loop-amt debt">
                   {v}
                 </text>
@@ -91,7 +93,7 @@ function LoopExample() {
             const r = arrow(a, b, 18);
             return (
               <g key={a + b}>
-                <path d={r.d} fill="none" stroke="#34D399" strokeWidth="1.8" strokeDasharray="6 5" markerEnd="url(#lahg)" />
+                <path d={r.d} fill="none" stroke="#6EE7B7" strokeWidth="1.8" strokeDasharray="6 5" markerEnd="url(#lahg)" />
                 <text x={r.lx} y={r.ly} textAnchor="middle" className="loop-amt credit">
                   {v}
                 </text>
@@ -101,11 +103,11 @@ function LoopExample() {
         </g>
         {Object.entries(NODES).map(([id, n]) => (
           <g key={id}>
-            <circle cx={n.x} cy={n.y} r="28" fill="#111A2E" stroke="#8B7BFF" strokeWidth="1.5" />
-            <text x={n.x} y={n.y + 6} textAnchor="middle" fontSize="16" fontWeight="600" fill="#E6EAF2">
+            <circle cx={n.x} cy={n.y} r="28" fill="#102220" stroke="#9B8CFF" strokeWidth="1.5" />
+            <text x={n.x} y={n.y + 6} textAnchor="middle" fontSize="16" fontWeight="600" fill="#EDF3EE">
               {id}
             </text>
-            <text x={n.x} y={n.y + (n.y < 150 ? -40 : 50)} textAnchor="middle" fontSize="14" fill="#8A94A8">
+            <text x={n.x} y={n.y + (n.y < 150 ? -40 : 50)} textAnchor="middle" fontSize="14" fill="#93A8A2">
               {n.name}
             </text>
           </g>
@@ -160,6 +162,7 @@ export default function Landing() {
       </header>
 
       <section className="hero">
+        <Guilloche />
         <div className="hero-text">
           <p className="eyebrow">Monad testnet · çok taraflı borç takası</p>
           <h1>Birbirine borçlu işletmeler, tek işlemde ödeşir.</h1>

@@ -6,6 +6,7 @@ import { monLabel, num, shortAddr } from "../lib/format.js";
 import { companyName, initials } from "../lib/names.js";
 import { Brand } from "./Brand.jsx";
 import { Tag } from "./Tag.jsx";
+import { Guilloche, Stamp } from "./Ornament.jsx";
 
 const lc = (s) => (s || "").toLowerCase();
 const toMon = (wei) => Number(wei) / 1e18;
@@ -94,7 +95,7 @@ function DebtGraph({ state, fading }) {
     <svg className="graph" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="İşletmeler arası borç ağı">
       <defs>
         <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0L10 5L0 10z" fill="#F87171" />
+          <path d="M0 0L10 5L0 10z" fill="#FF8A7A" />
         </marker>
       </defs>
       <g className={`edge ${fading ? "fading" : ""}`}>
@@ -109,7 +110,7 @@ function DebtGraph({ state, fading }) {
           const ex = e.q.x - (dx / len) * to;
           const ey = e.q.y - (dy / len) * to;
           if (star) {
-            return <line key={i} x1={sx} y1={sy} x2={ex} y2={ey} stroke="#F87171" strokeOpacity="0.55" strokeWidth="1" markerEnd="url(#ah)" />;
+            return <line key={i} x1={sx} y1={sy} x2={ex} y2={ey} stroke="#FF8A7A" strokeOpacity="0.55" strokeWidth="1" markerEnd="url(#ah)" />;
           }
           // hafif eğri: karşılıklı borçlar üst üste binmesin
           const mx = (sx + ex) / 2 - (dy / len) * 22;
@@ -119,7 +120,7 @@ function DebtGraph({ state, fading }) {
               key={i}
               d={`M${sx},${sy} Q${mx},${my} ${ex},${ey}`}
               fill="none"
-              stroke="#F87171"
+              stroke="#FF8A7A"
               strokeOpacity="0.8"
               strokeWidth={1 + (e.v / max) * 2.2}
               markerEnd="url(#ah)"
@@ -131,14 +132,14 @@ function DebtGraph({ state, fading }) {
         const cos = Math.cos(n.a);
         return (
           <g key={n.id}>
-            <circle cx={n.x} cy={n.y} r={n.hub ? 28 : tiny ? 7 : 18} fill="#111A2E" stroke="#8B7BFF" strokeWidth={n.hub ? 2 : 1.25} />
+            <circle cx={n.x} cy={n.y} r={n.hub ? 28 : tiny ? 7 : 18} fill="#102220" stroke="#9B8CFF" strokeWidth={n.hub ? 2 : 1.25} />
             {(n.hub || !tiny) && (
-              <text x={n.x} y={n.y + 5} textAnchor="middle" fontSize={n.hub ? 15 : 13} fontWeight="600" fill="#E6EAF2">
+              <text x={n.x} y={n.y + 5} textAnchor="middle" fontSize={n.hub ? 15 : 13} fontWeight="600" fill="#EDF3EE">
                 {n.badge}
               </text>
             )}
             {n.hub && (
-              <text x={n.x} y={n.y + 50} textAnchor="middle" fontSize="15" fill="#8A94A8">
+              <text x={n.x} y={n.y + 50} textAnchor="middle" fontSize="15" fill="#93A8A2">
                 {n.name}
               </text>
             )}
@@ -148,7 +149,7 @@ function DebtGraph({ state, fading }) {
                 y={n.y + Math.sin(n.a) * 28 + 5}
                 textAnchor={cos > 0.2 ? "start" : cos < -0.2 ? "end" : "middle"}
                 fontSize="15"
-                fill="#8A94A8"
+                fill="#93A8A2"
               >
                 {n.name}
               </text>
@@ -157,7 +158,7 @@ function DebtGraph({ state, fading }) {
         );
       })}
       {tiny && (
-        <text x={W / 2} y={H - 8} textAnchor="middle" fontSize="15" fill="#8A94A8">
+        <text x={W / 2} y={H - 8} textAnchor="middle" fontSize="15" fill="#93A8A2">
           {total} maaş faturası · ilk {nodes.length - 1} çalışan gösteriliyor
         </text>
       )}
@@ -239,6 +240,8 @@ function ResultCard({ result, onRebuild, busy, overlay }) {
   const s = result.stats;
   return (
     <div className={`done-card ${overlay ? "overlay" : ""}`} role="status">
+      <Guilloche lines={18} />
+      <Stamp />
       <h2>Takas tamam</h2>
       {result.scenario === "payroll" ? (
         <>
@@ -373,7 +376,7 @@ export function ScreenView({ demo = false }) {
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
-    QRCode.toDataURL(link, { margin: 1, width: 560, color: { dark: "#0e1726", light: "#ffffff" } })
+    QRCode.toDataURL(link, { margin: 1, width: 560, color: { dark: "#0b1715", light: "#ffffff" } })
       .then(setQr)
       .catch(() => setQr(""));
   }, [link]);

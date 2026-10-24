@@ -1,26 +1,26 @@
 /*
- * TAKAS — takas odası teması: derin lacivert zemin, sakin kartlar, tek vurgu Monad moru.
+ * TAKAS — çek ve banknot güvenlik baskısından türeyen takas odası kimliği.
  * Alacak yumuşak yeşil, borç yumuşak kırmızı; neon yok. Gölgesiz beyaz kartlar, 1px çizgiler.
  * Başlıklar Instrument Serif, metin Inter, rakamlar JetBrains Mono (tabular).
  */
 :root {
-  --bg: #0b1220;
-  --card: #111a2e;
-  --line: #1f2a44;
-  --line-strong: #2e3c5c;
-  --text: #e6eaf2;
-  --text-2: #8a94a8;
-  --accent: #8b7bff;
-  --accent-hover: #7a62ff;
-  --accent-soft: rgba(139, 123, 255, 0.14);
+  --bg: #0b1715;
+  --card: #102220;
+  --line: #1f3632;
+  --line-strong: #2f4c47;
+  --text: #edf3ee;
+  --text-2: #93a8a2;
+  --accent: #9b8cff;
+  --accent-hover: #8270ff;
+  --accent-soft: rgba(155, 140, 255, 0.13);
   --btn: #6e54ff;
-  --credit: #34d399;
-  --debt: #f87171;
-  --eth: #94a3b8;
-  --ink-on-green: #0b1220;
-  --serif: "Instrument Serif", "Times New Roman", Georgia, serif;
-  --sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --credit: #6ee7b7;
+  --debt: #ff8a7a;
+  --eth: #9aa8a5;
+  --ink-on-green: #0b1715;
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   color-scheme: dark;
   font-family: var(--sans);
   color: var(--text);
@@ -409,7 +409,8 @@ a:focus-visible {
 
 .result-card > h2 {
   font-family: var(--serif);
-  font-weight: 400;
+  font-weight: 560;
+  font-variation-settings: "opsz" 96;
   font-size: 30px;
   color: var(--text);
   margin-bottom: 8px;
@@ -455,7 +456,8 @@ a:focus-visible {
 
 .hero h1 {
   font-family: var(--serif);
-  font-weight: 400;
+  font-weight: 560;
+  font-variation-settings: "opsz" 96;
   font-size: clamp(36px, 4.6vw, 64px);
   line-height: 0.98;
   letter-spacing: -0.015em;
@@ -572,7 +574,8 @@ section.block {
 
 .block-title {
   font-family: var(--serif);
-  font-weight: 400;
+  font-weight: 560;
+  font-variation-settings: "opsz" 96;
   font-size: clamp(26px, 2.6vw, 36px);
   letter-spacing: -0.01em;
   margin-bottom: 20px;
@@ -684,7 +687,8 @@ section.block {
 
 .cta-strip h2 {
   font-family: var(--serif);
-  font-weight: 400;
+  font-weight: 560;
+  font-variation-settings: "opsz" 96;
   font-size: clamp(22px, 2.2vw, 30px);
 }
 
@@ -904,7 +908,8 @@ section.block {
 
 .howto-title {
   font-family: var(--serif);
-  font-weight: 400;
+  font-weight: 560;
+  font-variation-settings: "opsz" 96;
   font-size: clamp(26px, 2.2vw, 38px);
   line-height: 1.05;
   margin-bottom: 20px;
@@ -953,7 +958,8 @@ section.block {
 
 .done-card h2 {
   font-family: var(--serif);
-  font-weight: 400;
+  font-weight: 560;
+  font-variation-settings: "opsz" 96;
   font-size: clamp(40px, 3.8vw, 64px);
   line-height: 0.95;
   letter-spacing: -0.01em;
@@ -1237,5 +1243,109 @@ td:first-child {
   }
   section.block {
     padding-top: 48px;
+  }
+}
+
+/* ---------- kimlik: gilyoş ve kaşe ---------- */
+.guilloche {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--accent);
+  opacity: 0.13;
+  pointer-events: none;
+}
+
+.hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero > .guilloche {
+  z-index: -1;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 45%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 45%, #000 100%);
+}
+
+.loop {
+  position: relative;
+}
+
+.stamp {
+  color: var(--accent);
+  display: block;
+}
+
+/* tanıtımdaki örnek kartına basılı kaşe */
+.loop > .stamp {
+  position: absolute;
+  top: -34px;
+  right: -26px;
+  width: 116px;
+  height: 116px;
+  transform: rotate(-12deg);
+  opacity: 0.92;
+}
+
+/* "Takas tamam" anı: kart bir çek gibi, kaşe basılır */
+.done-card {
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 27px, rgba(155, 140, 255, 0.06) 27px 28px),
+    var(--card);
+}
+
+.done-card > .guilloche {
+  opacity: 0.09;
+}
+
+.done-card > *:not(.guilloche):not(.stamp) {
+  position: relative;
+}
+
+.done-card > .stamp {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: clamp(96px, 9vw, 140px);
+  height: clamp(96px, 9vw, 140px);
+  transform: rotate(-10deg);
+}
+
+.done-card.overlay > .stamp {
+  animation: slam 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) 0.15s both;
+}
+
+@keyframes slam {
+  from {
+    opacity: 0;
+    transform: scale(1.8) rotate(-24deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-10deg);
+  }
+}
+
+.brand {
+  font-family: var(--serif);
+  font-weight: 640;
+  letter-spacing: 0.06em;
+  font-size: 19px;
+}
+
+@media (max-width: 720px) {
+  .loop > .stamp {
+    top: -22px;
+    right: -6px;
+    width: 84px;
+    height: 84px;
+  }
+  .done-card > .stamp {
+    width: 76px;
+    height: 76px;
+    top: 12px;
+    right: 12px;
   }
 }
