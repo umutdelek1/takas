@@ -3,7 +3,7 @@
 **Canlı demo:** https://takas-six.vercel.app · **Ağ:** Monad Testnet
 
 ## Problem
-Türkiye'de 2026'nın ilk 9 ayında 257.985 karşılıksız çek yazıldı, toplam 270 milyar TL (TBB Risk Merkezi, yıllık +%50). Bunun bir kısmı nakit sıkışıklığından geliyor: KOBİ'ler ve tedarik zincirleri birbirine zincirleme borçlu. A, B'ye; B, C'ye; C, A'ya borçlu. Herkes alacaklı, ama herkes nakit arıyor.
+Türkiye'de 2026'nın ilk 9 ayında 257.985 karşılıksız çek yazıldı, toplam 270 milyar TL (TBB Risk Merkezi; tutar yıllık yaklaşık +%50, adet yaklaşık +%15). Bunun bir kısmı nakit sıkışıklığından geliyor: KOBİ'ler ve tedarik zincirleri birbirine zincirleme borçlu. A, B'ye; B, C'ye; C, A'ya borçlu. Herkes alacaklı, ama herkes nakit arıyor.
 
 ## Çözüm
 TAKAS, işletmelerin birbirine olan borçlarını **tek bir atomik işlemde** çok taraflı olarak netleştirir. Herkes sadece **net** borcunu öder.
@@ -27,10 +27,14 @@ Takas, tüm defteri tek işlemde okuyup günceller. Bu iş depolama ağırlıkl�
 | | Monad Testnet | Ethereum kuralları (anvil, EIP-7825) |
 |---|---|---|
 | Tek işlemde takas | **20.000 fatura / 10.000 işletme**, 26.971.768 gas (ölçüldü) | 2.500 işletmede 16,78M sınırını aşıp **düştü** (ölçüldü) |
-| Tek işleme sığan işletme | 10.000+ (ölçüldü) | ≈ 2.421 (hesaplandı) |
-| İşlem başı gas sınırı | blok gas limiti 150M; 28,6M'lik işlem geçti (ölçüldü) | 16.777.216 (EIP-7825) |
+| Tek işleme sığan işletme | 10.000 (ölçüldü) | ≈ 2.421 (hesaplandı) |
+| İşlem başı sınır | 30M (blok sınırı 150M) | 16.777.216 (EIP-7825) |
+
+10.000 işletmelik takas 26.971.768 gas ile Monad'ın 30M işlem sınırının altında kaldı. Ethereum'da aynı iş 16.777.216 sınırının çok üstünde (≈ 70M) kalır.
 
 Kanıt işlemi: [Monad testnet explorer](https://testnet.monadexplorer.com/tx/0xa7adf24e16719ab9f4a7dd9f05198ab7f03eea0e63dc0a0ca49a476cc9ad5ab3)
+
+Ölçümün yapıldığı `TakasStress`, `Takas`'ı miras alır ve `settle()`'ı değiştirmez. Ölçüm kontratının ve canlı `Takas` kontratının zincirdeki çalışma kodu, bu depodaki `contracts/src` kaynağının güncel derlemesiyle bayt bayt aynıdır; yani `settle()` ölçülen ve canlıda çalışan kodla aynı kaynaktan derlenmiştir.
 
 Ham veri: [`public/bench.json`](public/bench.json). Her rakam kaynağıyla etiketlidir: **ölçülen** (gerçek işlem makbuzu ve `Settled` olayı), **tahmin** (`eth_estimateGas`, işlem gönderilmedi), **hesaplanan** (ölçülen değerlerden türetildi). Grafik: `/#/olcum`.
 
@@ -106,6 +110,12 @@ Betikler:
 - Teminat MON'dur. Gerçek kullanımda stablecoin (USDC) olmalıdır.
 - Tutarlar zincir üstünde herkese açıktır. Gizlilik ileride ele alınacaktır.
 - Ölçek testinde sentetik işletmeler kullanılmıştır. Canlı demo gerçek cüzdanlarla çalışır.
+
+## Kaynaklar
+- Karşılıksız çek verisi (TBB Risk Merkezi, 2026 ilk 9 ay): https://www.alomaliye.com/2026/10/16/karsiliksiz-cek-tutari-yuzde-50-artti/
+- Monad gas sınırları (işlem başı 30M, blok 150M): https://docs.monad.xyz/developer-essentials/gas-pricing
+- Monad MIP-8 / opcode fiyatlandırması: https://docs.monad.xyz/developer-essentials/opcode-pricing
+- EIP-7825 işlem başı gas sınırı (Fusaka): https://blog.ethereum.org/2025/10/21/fusaka-gascap-update
 
 ## Lisans
 MIT
