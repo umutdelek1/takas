@@ -4,6 +4,7 @@ import { EXPLORER } from "../lib/chain.js";
 import { num, shortAddr } from "../lib/format.js";
 import deployment from "../deployment.js";
 import { Brand } from "./Brand.jsx";
+import { WalletButton } from "./WalletButton.jsx";
 import { Tag } from "./Tag.jsx";
 import { Guilloche, Stamp } from "./Ornament.jsx";
 
@@ -159,6 +160,7 @@ export default function Landing() {
           <a href="#/play">Telefon</a>
           <a href="#/olcum">Ölçüm</a>
         </nav>
+        <WalletButton />
       </header>
 
       <section className="hero">

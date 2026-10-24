@@ -1,6 +1,7 @@
 import { useBench } from "../lib/api.js";
 import { num } from "../lib/format.js";
 import { Brand } from "./Brand.jsx";
+import { WalletButton } from "./WalletButton.jsx";
 import { Tag } from "./Tag.jsx";
 
 const W = 860;
@@ -89,6 +90,7 @@ export default function Bench() {
           <a href="#/ekran">Ekran</a>
           <a href="#/play">Telefon</a>
         </nav>
+        <WalletButton />
       </div>
 
       <div>

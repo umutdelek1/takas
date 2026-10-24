@@ -1,31 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  CONTRACT,
-  DEBT_CHOICES,
-  EXPLORER,
-  TEMP_COLLATERAL,
-  client,
-  connectInjected,
-  hasInjected,
-  loadWallet,
-  trError,
-  write,
-} from "../lib/chain.js";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CONTRACT, DEBT_CHOICES, EXPLORER, TEMP_COLLATERAL, client, trError, write } from "../lib/chain.js";
 import { postJson, useTakasState } from "../lib/api.js";
 import { mon, monLabel, shortAddr } from "../lib/format.js";
 import { companyName, initials } from "../lib/names.js";
+import { connectWallet, metamaskDeepLink, useExtWallet } from "../lib/wallet.js";
 import { Brand } from "./Brand.jsx";
+import { WalletButton } from "./WalletButton.jsx";
 
-const DRIP_KEY = "takas.dripAsked";
 const lc = (s) => (s || "").toLowerCase();
+const dripKey = (a) => `takas.drip.${lc(a)}`;
 
 export default function Play() {
-  // Varsayılan: tarayıcıda üretilen geçici cüzdan. İsteğe bağlı: MetaMask (ext).
-  const burner = useMemo(() => loadWallet(), []);
-  const [ext, setExt] = useState(null);
-  const [extMsg, setExtMsg] = useState("");
-  const account = ext ?? burner;
-  const injectedAvailable = useMemo(() => hasInjected(), []);
+  // MetaMask zorunlu: kayıt ve borç yazma bağlı cüzdanla, Monad Testnet'te imzalanır.
+  const { ext, msg: walletMsg, available } = useExtWallet();
+  const ready = !!ext && ext.chainOk;
+  const account = ext ?? { address: null };
   const { state, error: stateError, refresh } = useTakasState(2000);
   const [balance, setBalance] = useState(null);
   const [dripMsg, setDripMsg] = useState("");
@@ -36,10 +25,14 @@ export default function Play() {
   const [result, setResult] = useState(null);
   const prev = useRef({ session: null, me: null });
 
-  const me = state?.members.find((m) => lc(m.address) === lc(account.address)) ?? null;
+  const me = ready && state ? (state.members.find((m) => lc(m.address) === lc(account.address)) ?? null) : null;
 
   // ---- bakiye ----
   const readBalance = useCallback(async () => {
+    if (!account.address) {
+      setBalance(null);
+      return;
+    }
     try {
       setBalance(await client.getBalance({ address: account.address }));
     } catch {
@@ -53,17 +46,18 @@ export default function Play() {
     return () => clearInterval(t);
   }, [readBalance]);
 
-  // ---- otomatik MON ----
+  // ---- test MON: bağlı cüzdanın bakiyesi 0 ise bir kez otomatik istenir ----
   const askDrip = useCallback(async () => {
+    if (!account.address) return;
     setDripMsg("MON isteniyor…");
     try {
       const r = await postJson("/api/drip", { address: account.address });
       try {
-        localStorage.setItem(DRIP_KEY, "1");
+        localStorage.setItem(dripKey(account.address), "1");
       } catch {
         /* kalıcı değil */
       }
-      setDripMsg(r.already ? "" : "0,2 MON geldi.");
+      setDripMsg(r.already ? "Bu cüzdan daha önce kullanılmış; test MON yalnızca boş, yeni cüzdanlara gönderilir." : "0,2 MON geldi.");
       readBalance();
     } catch (e) {
       setDripMsg(`MON alınamadı: ${e.message}`);
@@ -71,14 +65,15 @@ export default function Play() {
   }, [account.address, readBalance]);
 
   useEffect(() => {
+    if (!ready || balance !== 0n) return;
     let asked = false;
     try {
-      asked = localStorage.getItem(DRIP_KEY) === "1";
+      asked = localStorage.getItem(dripKey(account.address)) === "1";
     } catch {
       /* yok say */
     }
     if (!asked) askDrip();
-  }, [askDrip]);
+  }, [ready, balance, account.address, askDrip]);
 
   // ---- cüzdan değişince önceki cüzdanın durumu taşınmaz ----
   useEffect(() => {
@@ -86,17 +81,8 @@ export default function Play() {
     setResult(null);
     setTarget(null);
     setBalance(null);
+    setDripMsg("");
   }, [account.address]);
-
-  async function connectMetaMask() {
-    setExtMsg("MetaMask'ta onay bekleniyor…");
-    try {
-      setExt(await connectInjected());
-      setExtMsg("");
-    } catch (e) {
-      setExtMsg(trError(e));
-    }
-  }
 
   // ---- takas sonucu ----
   useEffect(() => {
@@ -164,45 +150,64 @@ export default function Play() {
     <div className="phone">
       <div className="topbar">
         <Brand />
-        <span className="tag">Monad testnet</span>
+        <WalletButton />
       </div>
 
-      <section className="card">
-        <h2>Cüzdan</h2>
-        <div className="balance num">{balance === null ? "…" : `${mon(balance)} MON`}</div>
-        <div className="addr num">{shortAddr(account.address)}</div>
-        {dripMsg && (
-          <p className={dripMsg.startsWith("MON alınamadı") ? "err" : "muted"} style={{ marginTop: 8 }}>
-            {dripMsg}
+      {!ext && (
+        <section className="card">
+          <h2>Cüzdanını bağla</h2>
+          <p style={{ marginBottom: 14 }}>
+            TAKAS'ta kayıt ve borç yazma MetaMask ile imzalanır. Bağlanınca Monad Testnet MetaMask'a otomatik eklenir ve seçilir.
           </p>
-        )}
-        {(balance === 0n || (ext && balance !== null && balance < TEMP_COLLATERAL)) && (
-          <button className="btn ghost block" style={{ marginTop: 12 }} onClick={askDrip}>
-            MON iste
-          </button>
-        )}
-        {ext ? (
-          <>
-            <p className="muted" style={{ marginTop: 10 }}>
-              MetaMask cüzdanı kullanılıyor.
+          {available ? (
+            <button className="btn block" onClick={connectWallet} disabled={walletMsg.includes("bekleniyor")}>
+              {walletMsg.includes("bekleniyor") ? "Onay bekleniyor…" : "MetaMask ile bağlan"}
+            </button>
+          ) : (
+            <>
+              <a className="btn block" href={metamaskDeepLink()}>
+                MetaMask uygulamasında aç
+              </a>
+              <a className="btn ghost block" style={{ marginTop: 8 }} href="https://metamask.io/download" target="_blank" rel="noreferrer">
+                MetaMask yükle
+              </a>
+            </>
+          )}
+          {walletMsg && !walletMsg.includes("bekleniyor") && (
+            <p className="err" style={{ marginTop: 8 }}>
+              {walletMsg}
             </p>
-            <button className="btn ghost block" style={{ marginTop: 8 }} onClick={() => setExt(null)}>
-              Geçici cüzdana dön
+          )}
+        </section>
+      )}
+
+      {ext && !ext.chainOk && (
+        <section className="card">
+          <h2>Ağ</h2>
+          <p style={{ marginBottom: 12 }}>MetaMask'ta Monad Testnet seçili değil.</p>
+          <button className="btn block" onClick={connectWallet}>
+            Monad Testnet'e geç
+          </button>
+        </section>
+      )}
+
+      {ready && (
+        <section className="card">
+          <h2>Cüzdan</h2>
+          <div className="balance num">{balance === null ? "…" : `${mon(balance)} MON`}</div>
+          <div className="addr num">{shortAddr(account.address)} · MetaMask · Monad Testnet</div>
+          {dripMsg && (
+            <p className={dripMsg.startsWith("MON alınamadı") ? "err" : "muted"} style={{ marginTop: 8 }}>
+              {dripMsg}
+            </p>
+          )}
+          {balance !== null && balance < TEMP_COLLATERAL && !me && (
+            <button className="btn ghost block" style={{ marginTop: 12 }} onClick={askDrip}>
+              Test MON iste
             </button>
-          </>
-        ) : (
-          injectedAvailable && (
-            <button className="btn ghost block" style={{ marginTop: 12 }} onClick={connectMetaMask}>
-              MetaMask ile bağlan
-            </button>
-          )
-        )}
-        {extMsg && (
-          <p className={extMsg.includes("bekleniyor") ? "muted" : "err"} style={{ marginTop: 8 }}>
-            {extMsg}
-          </p>
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       {!state && !stateError && (
         <section className="card muted">
@@ -212,7 +217,7 @@ export default function Play() {
       )}
       {stateError && !state && <section className="card err">Bağlantı kurulamadı: {stateError}</section>}
 
-      {state && !me && (
+      {ready && state && !me && (
         <section className="card">
           <h2>Şirketini kaydet</h2>
           <p style={{ marginBottom: 14 }}>

@@ -5,6 +5,7 @@ import { EXPLORER, CONTRACT } from "../lib/chain.js";
 import { monLabel, num, shortAddr } from "../lib/format.js";
 import { companyName, initials } from "../lib/names.js";
 import { Brand } from "./Brand.jsx";
+import { WalletButton } from "./WalletButton.jsx";
 import { Tag } from "./Tag.jsx";
 import { Guilloche, Stamp } from "./Ornament.jsx";
 
@@ -516,6 +517,7 @@ export function ScreenView({ demo = false }) {
           <a href="#/host">Host</a>
           <a href="#/olcum">Ölçüm</a>
         </nav>
+        <WalletButton />
       </div>
       {demo && (
         <div className="demo-banner" role="note">

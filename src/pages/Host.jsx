@@ -2,6 +2,7 @@ import { useState } from "react";
 import { postJson, useTakasState } from "../lib/api.js";
 import { monLabel, num } from "../lib/format.js";
 import { Brand } from "./Brand.jsx";
+import { WalletButton } from "./WalletButton.jsx";
 
 const TOKEN_KEY = "takas.hostToken";
 
@@ -57,6 +58,7 @@ export default function Host() {
       <div className="topbar">
         <Brand />
         <span className="tag">Host</span>
+        <WalletButton />
       </div>
 
       <section className="card">

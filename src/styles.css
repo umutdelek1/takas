@@ -1349,3 +1349,76 @@ td:first-child {
     right: 12px;
   }
 }
+/* ---------- header cüzdan butonu ---------- */
+.topbar {
+  justify-content: flex-start;
+}
+
+.topbar > :nth-child(2) {
+  margin-left: auto;
+}
+
+.wallet-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--card);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.wallet-btn.primary {
+  background: var(--btn);
+  border-color: var(--btn);
+  color: #fff;
+}
+
+.wallet-btn:disabled {
+  opacity: 0.6;
+}
+
+.wallet-err {
+  color: var(--debt);
+  font-size: 13px;
+  max-width: 220px;
+}
+
+.wallet-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  display: grid;
+  min-width: 240px;
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.wallet-menu button {
+  min-height: 44px;
+  padding: 0 14px;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+.wallet-menu button:hover {
+  background: var(--accent-soft);
+}
