@@ -86,6 +86,8 @@ async function newWrite(functionName, args, value) {
 }
 
 const write = mode === "new" ? newWrite : oldWrite;
+// GAP: bağıştan sonra kullanıcının butona basana kadar geçen süre (ms); varsayılan 0 = en kötü durum.
+await sleep(Number(process.env.GAP || 0));
 const s1 = Date.now();
 await write("register", [], parseEther("0.1"));
 rows.push(["register: TOPLAM (butondan onaya)", Date.now() - s1]);
