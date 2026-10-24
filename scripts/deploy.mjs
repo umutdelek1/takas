@@ -49,7 +49,7 @@ const stress = await deploy("TakasStress", [FEE]);
 writeFileSync(
   join(root, "src", "deployment.js"),
   `// scripts/deploy.mjs tarafından yazıldı.\nexport default ${JSON.stringify(
-    { chainId: 10143, takas: takas.address, stress: stress.address, deployBlock: takas.block },
+    { ...prev, chainId: 10143, takas: takas.address, stress: stress.address, deployBlock: takas.block },
     null,
     2,
   )};\n`,

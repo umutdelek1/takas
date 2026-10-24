@@ -1,6 +1,6 @@
 # TAKAS: İşletmeler arası zincir üstü takas odası
 
-**Canlı demo:** https://takas-six.vercel.app · **Ağ:** Monad Testnet
+**Canlı demo:** https://takas-six.vercel.app · **Tek tıkla dene: [/#/demo](https://takas-six.vercel.app/#/demo)** · **Ağ:** Monad Testnet
 
 ## Problem
 Türkiye'de 2026'nın ilk 9 ayında 257.985 karşılıksız çek yazıldı, toplam 270 milyar TL (TBB Risk Merkezi; tutar yıllık yaklaşık +%50, adet yaklaşık +%15). Bunun bir kısmı nakit sıkışıklığından geliyor: KOBİ'ler ve tedarik zincirleri birbirine zincirleme borçlu. A, B'ye; B, C'ye; C, A'ya borçlu. Herkes alacaklı, ama herkes nakit arıyor.
@@ -58,6 +58,8 @@ Ham veri: [`public/bench.json`](public/bench.json). Her rakam kaynağıyla etike
 - Takas: [`0x670f4f68c7993d13361a1ef6987f03f3c049930d`](https://testnet.monadexplorer.com/address/0x670f4f68c7993d13361a1ef6987f03f3c049930d)
 - TakasStress (ölçüm, 10.000 işletmelik gerçek takas bu kontratta yapıldı): [`0x4e212ec77ef2d0a2588e0337da72b7cf41434492`](https://testnet.monadexplorer.com/address/0x4e212ec77ef2d0a2588e0337da72b7cf41434492)
 
+- Demo (`/#/demo`, ayrı bir TakasStress örneği; canlı Takas'a dokunmaz): [`0x67c6908dab7a1e52c93888ad63b5481fafb1a520`](https://testnet.monadexplorer.com/address/0x67c6908dab7a1e52c93888ad63b5481fafb1a520)
+
 Güncel adresler `src/deployment.js` dosyasındadır.
 
 ## Sayfalar
@@ -67,6 +69,7 @@ Güncel adresler `src/deployment.js` dosyasındadır.
 | `/#/play` | Telefon: şirketini kaydet, borç yaz, net durum, takas sonucu |
 | `/#/host` | Takası tetikleme (token korumalı) |
 | `/#/olcum` | Monad ve Ethereum ölçüm grafiği |
+| `/#/demo` | Herkese açık demo: sentetik işletmelerle ağı tek tıkla oluştur, TAKAS'a bas. Gerçek Monad testnet işlemleri, ayrı bir demo kontratı |
 
 ## Mimari
 ```
@@ -75,6 +78,7 @@ api/               Vercel serverless fonksiyonları (ayrı sunucu yok)
   state.js         kontrat durumu, Cache-Control: s-maxage=1
   drip.js          yeni cüzdana 0,2 MON, her adrese bir kez
   settle.js        host anahtarıyla takas
+  demo/            herkese açık demo: state, seed (10 işletme + 20 borç), settle; hız sınırlı
   rpc.js           telefonlar için RPC vekili (yeniden dene, yedek RPC, anahtar gizli)
 contracts/         Foundry: Takas.sol, TakasStress.sol, testler
 scripts/           deploy, ölçüm ve yardımcı betikler (Node)

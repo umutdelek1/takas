@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
-import { useBench, useTakasState } from "../lib/api.js";
+import { postJson, useBench, useTakasState } from "../lib/api.js";
 import { EXPLORER, CONTRACT } from "../lib/chain.js";
 import { monLabel, num, shortAddr } from "../lib/format.js";
 import { companyName, initials } from "../lib/names.js";
@@ -180,8 +180,80 @@ function Compare({ bench }) {
   );
 }
 
-export default function Screen() {
-  const { state, error } = useTakasState(1500);
+/** Demo kontrolleri: demo ağını oluşturur ve takas yapar (gerçek Monad testnet işlemleri). */
+function DemoPanel({ state, refresh }) {
+  const [busy, setBusy] = useState("");
+  const [msg, setMsg] = useState(null);
+
+  async function act(kind) {
+    setBusy(kind);
+    setMsg(null);
+    try {
+      const r = await postJson(kind === "seed" ? "/api/demo/seed" : "/api/demo/settle", {});
+      setMsg(
+        kind === "seed"
+          ? { ok: true, text: `${r.merchantsAdded} işletme ve ${r.invoicesAdded} borç eklendi.`, links: r.txs.map((t, i) => [`İşlem ${i + 1}`, t.explorer]) }
+          : { ok: true, text: "Takas işlemi onaylandı.", links: [["İşlemi gör", r.explorer]] },
+      );
+      refresh();
+    } catch (e) {
+      setMsg({ ok: false, text: e.message });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  const full = state && state.invoiceCount + 20 > state.limits.maxOpenInvoices;
+  return (
+    <section className="card" style={{ display: "grid", gap: 12 }}>
+      <h2 style={{ marginBottom: 0 }}>Tek tıkla dene</h2>
+      <p className="muted" style={{ fontSize: 14 }}>
+        1. Demo ağını oluştur. 2. TAKAS'a bas ve borçların tek işlemde kapanmasını izle.
+      </p>
+      <button className="btn big block" disabled={!!busy || !state || full} onClick={() => act("seed")}>
+        {busy === "seed" ? (
+          <>
+            <span className="spinner" />
+            Oluşturuluyor…
+          </>
+        ) : (
+          "Demo ağını oluştur"
+        )}
+      </button>
+      <button
+        className="btn big block"
+        style={{ background: "var(--credit)", color: "var(--ink-on-green)" }}
+        disabled={!!busy || !state || state.invoiceCount === 0}
+        onClick={() => act("settle")}
+      >
+        {busy === "settle" ? (
+          <>
+            <span className="spinner" />
+            Takas yapılıyor…
+          </>
+        ) : (
+          "TAKAS"
+        )}
+      </button>
+      {full && <p className="muted" style={{ fontSize: 13 }}>Ağda yeterince açık fatura var. Önce TAKAS'a bas.</p>}
+      {msg && (
+        <p className={msg.ok ? "ok" : "err"} style={{ fontSize: 14 }}>
+          {msg.text}{" "}
+          {msg.links?.map(([label, href]) => (
+            <span key={href}>
+              <a href={href} target="_blank" rel="noreferrer">
+                {label}
+              </a>{" "}
+            </span>
+          ))}
+        </p>
+      )}
+    </section>
+  );
+}
+
+export function ScreenView({ demo = false }) {
+  const { state, error, refresh } = useTakasState(1500, demo ? "/api/demo/state" : "/api/state");
   const bench = useBench();
   const [qr, setQr] = useState("");
   const link = `${location.origin}/#/play`;
@@ -242,22 +314,35 @@ export default function Screen() {
       <div className="topbar">
         <Brand />
         <nav className="links">
+          {demo ? <a href="#/">Canlı ekran</a> : <a href="#/demo">Demo</a>}
           <a href="#/play">Telefon</a>
           <a href="#/host">Host</a>
           <a href="#/olcum">Ölçüm</a>
         </nav>
       </div>
+      {demo && (
+        <div className="demo-banner" role="note">
+          Demo · sentetik işletmeler · gerçek Monad testnet işlemleri
+        </div>
+      )}
 
       <div className="screen-grid">
         <div className="col">
-          <section className="card" style={{ textAlign: "center" }}>
-            <h2>Katıl</h2>
-            {qr ? <img className="qr" src={qr} alt="Katılmak için QR kodunu okut" /> : <div className="qr" style={{ aspectRatio: "1" }} />}
-            <p style={{ marginTop: 10, fontWeight: 600 }}>Okut, şirketini kaydet</p>
-            <p className="muted num" style={{ fontSize: 12, wordBreak: "break-all" }}>
-              {link}
-            </p>
-          </section>
+          {demo ? (
+            <DemoPanel state={state} refresh={refresh} />
+          ) : (
+            <section className="card" style={{ textAlign: "center" }}>
+              <h2>Katıl</h2>
+              {qr ? <img className="qr" src={qr} alt="Katılmak için QR kodunu okut" /> : <div className="qr" style={{ aspectRatio: "1" }} />}
+              <p style={{ marginTop: 10, fontWeight: 600 }}>Okut, şirketini kaydet</p>
+              <p className="muted num" style={{ fontSize: 12, wordBreak: "break-all" }}>
+                {link}
+              </p>
+              <a className="btn ghost block" style={{ marginTop: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }} href="#/demo">
+                Tek tıkla dene: /#/demo
+              </a>
+            </section>
+          )}
           <section className="card">
             <h2>Ağ</h2>
             <div className="stat-lines">
@@ -371,12 +456,16 @@ export default function Screen() {
           </section>
           <p className="muted" style={{ fontSize: 12 }}>
             Kontrat:{" "}
-            <a href={`${EXPLORER}/address/${CONTRACT}`} target="_blank" rel="noreferrer" className="num">
-              {shortAddr(CONTRACT)}
+            <a href={`${EXPLORER}/address/${state?.contract ?? CONTRACT}`} target="_blank" rel="noreferrer" className="num">
+              {shortAddr(state?.contract ?? CONTRACT)}
             </a>
           </p>
         </div>
       </div>
     </div>
   );
+}
+
+export default function Screen() {
+  return <ScreenView />;
 }

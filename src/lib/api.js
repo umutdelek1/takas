@@ -11,7 +11,7 @@ async function jsonOrError(r) {
   return j;
 }
 
-export const getState = () => fetch("/api/state").then(jsonOrError);
+export const getState = (path = "/api/state") => fetch(path).then(jsonOrError);
 
 export const postJson = (path, body, headers = {}) =>
   fetch(path, {
@@ -21,7 +21,7 @@ export const postJson = (path, body, headers = {}) =>
   }).then(jsonOrError);
 
 /** Kontrat durumunu düzenli aralıkla çeker. */
-export function useTakasState(intervalMs = 2000) {
+export function useTakasState(intervalMs = 2000, path = "/api/state") {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
   const alive = useRef(true);
@@ -32,7 +32,7 @@ export function useTakasState(intervalMs = 2000) {
     let timer;
     const tick = async () => {
       try {
-        const s = await getState();
+        const s = await getState(path);
         if (alive.current) {
           setState(s);
           setError(null);
@@ -51,7 +51,7 @@ export function useTakasState(intervalMs = 2000) {
       alive.current = false;
       clearTimeout(timer);
     };
-  }, [intervalMs]);
+  }, [intervalMs, path]);
 
   return { state, error, refresh: () => refresh.current() };
 }

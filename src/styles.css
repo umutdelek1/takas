@@ -641,3 +641,16 @@ th:first-child,
 td:first-child {
   text-align: left;
 }
+
+/* ---------- demo ---------- */
+.demo-banner {
+  margin: -6px 0 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #4a3f7a;
+  background: rgba(139, 116, 255, 0.14);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}

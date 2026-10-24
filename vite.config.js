@@ -13,7 +13,7 @@ function apiDev() {
       loadEnv();
       process.env.HOST_TOKEN ||= "dev-token";
       server.middlewares.use(async (req, res, next) => {
-        const m = req.url?.match(/^\/api\/([a-z]+)(\?.*)?$/);
+        const m = req.url?.match(/^\/api\/([a-z/]+)(\?.*)?$/);
         if (!m) return next();
         try {
           const chunks = [];
