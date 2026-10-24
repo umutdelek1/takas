@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {Takas} from "../src/Takas.sol";
 
-/// @notice Rastgele senaryolarda kontratı JS referansıyla (test/js/takas-ref.js) birebir karşılaştırır.
+/// @notice Rastgele senaryolarda kontratı JS referansıyla (test/js/takas-ref.cjs) birebir karşılaştırır.
 contract TakasDiffTest is Test {
     uint256 constant BASE = 0xA000;
 
@@ -80,7 +80,7 @@ contract TakasDiffTest is Test {
     function testFuzz_MatchesJsReference(uint32 seed) public {
         string[] memory cmd = new string[](3);
         cmd[0] = "node";
-        cmd[1] = "test/js/takas-ref.js";
+        cmd[1] = "test/js/takas-ref.cjs";
         cmd[2] = vm.toString(uint256(seed));
         data = abi.decode(vm.ffi(cmd), (uint256[]));
         p = 0;

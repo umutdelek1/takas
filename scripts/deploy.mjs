@@ -41,7 +41,10 @@ function encode(abi, bytecode, args) {
   return encodeDeployData({ abi, bytecode, args });
 }
 
-const takas = await deploy("Takas", [FEE]);
+// --stress-only: yayındaki Takas'a dokunmadan yalnızca ölçüm kontratını yeniler.
+const prev = (await import("../src/deployment.js")).default;
+const stressOnly = process.argv.includes("--stress-only") && prev.takas;
+const takas = stressOnly ? { address: prev.takas, block: prev.deployBlock } : await deploy("Takas", [FEE]);
 const stress = await deploy("TakasStress", [FEE]);
 writeFileSync(
   join(root, "src", "deployment.js"),

@@ -11,13 +11,26 @@ contract TakasStress is Takas {
     constructor(uint256 feeWei) Takas(feeWei) {}
 
     /// @notice `count` sentetik esnaf ekler, her birine `collateralWei` sentetik teminat verir.
+    /// @dev Adres kaydı yazılmaz (yalnızca dizi uzunluğu büyür): settle() esnaf adreslerini okumaz,
+    ///      yalnızca `_members.length` ve `_accounts` kelimelerini okur. Böylece ölçüm tohumlaması ucuz kalır.
     function seedMerchants(uint256 count, uint256 collateralWei) external onlyOwner {
         uint256 units = _units(collateralWei);
+        if (units > M64) revert AmountTooLarge();
         uint256 start = _members.length;
-        for (uint256 k; k < count; ++k) {
-            address a = address(uint160(uint256(keccak256(abi.encode(address(this), start + k)))));
-            _addMember(a, units);
+        uint256 end = start + count;
+        if (end > M32) revert TooManyMembers();
+        assembly ("memory-safe") {
+            sstore(_members.slot, end)
         }
+        uint256 id = start;
+        if (id & 1 == 1 && id < end) {
+            _accounts[id >> 1] |= units << 128;
+            ++id;
+        }
+        for (; id + 1 < end; id += 2) {
+            _accounts.push(units | (units << 128));
+        }
+        if (id < end) _accounts.push(units);
     }
 
     /// @notice `count` rastgele fatura (1..maxAmountWei) ekler.
@@ -27,13 +40,24 @@ contract TakasStress is Takas {
         uint256 maxUnits = _units(maxAmountWei);
         if (maxUnits == 0) revert ZeroAmount();
         if (maxUnits > MAX_INVOICE_UNITS) revert AmountTooLarge();
+        uint256 idx = _openInvoices;
         for (uint256 k; k < count; ++k) {
             uint256 r = uint256(keccak256(abi.encode(seed, k)));
             uint256 d = r % n;
             uint256 c = (r >> 64) % (n - 1);
             if (c >= d) ++c;
-            _addInvoice(d, c, 1 + ((r >> 128) % maxUnits));
+            uint256 inv = d | (c << 32) | ((1 + ((r >> 128) % maxUnits)) << 64);
+            if (idx & 1 == 0) {
+                if (idx >> 1 == _invoices.length) _invoices.push(inv);
+                else _invoices[idx >> 1] = inv;
+            } else {
+                _invoices[idx >> 1] |= inv << 128;
+            }
+            ++idx;
         }
+        if (idx > MAX_OPEN_INVOICES) revert TooManyInvoices();
+        // forge-lint: disable-next-line(unsafe-typecast)
+        _openInvoices = uint32(idx);
     }
 
     /// @notice Halka biçiminde fatura ekler: i → i+1 (mod n), hepsi aynı tutar. Nakitsiz kapanır.

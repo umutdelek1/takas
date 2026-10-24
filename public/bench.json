@@ -1,0 +1,128 @@
+{
+  "generatedAt": "2026-10-24T09:37:04.389Z",
+  "ethereum": {
+    "chainId": 31337,
+    "hardfork": "prague",
+    "txGasCap": "16777216",
+    "invoicesPerMerchant": 2,
+    "points": [
+      {
+        "merchants": 500,
+        "invoices": 1000,
+        "gasEstimate": "3587735",
+        "gasPerMerchant": 7175,
+        "fitsCap": true
+      },
+      {
+        "merchants": 1000,
+        "invoices": 2000,
+        "gasEstimate": "7054663",
+        "gasPerMerchant": 7055,
+        "fitsCap": true
+      },
+      {
+        "merchants": 2000,
+        "invoices": 4000,
+        "gasEstimate": "14044362",
+        "gasPerMerchant": 7022,
+        "fitsCap": true
+      },
+      {
+        "merchants": 2500,
+        "invoices": 5000,
+        "gasEstimate": "17322976",
+        "gasPerMerchant": 6929,
+        "fitsCap": false
+      },
+      {
+        "merchants": 3000,
+        "invoices": 6000,
+        "gasEstimate": "20575480",
+        "gasPerMerchant": 6858,
+        "fitsCap": false
+      },
+      {
+        "merchants": 5000,
+        "invoices": 10000,
+        "gasEstimate": "34810234",
+        "gasPerMerchant": 6962,
+        "fitsCap": false
+      },
+      {
+        "merchants": 10000,
+        "invoices": 20000,
+        "gasEstimate": "70004263",
+        "gasPerMerchant": 7000,
+        "fitsCap": false
+      }
+    ],
+    "overLimitSettle": {
+      "merchants": 2500,
+      "invoices": 5000,
+      "gasLimit": "16777216",
+      "gasEstimateNeeded": "17322976",
+      "status": "reverted",
+      "receiptGasUsed": "16777216",
+      "note": "Gas yetmedi: işlem düştü, hiçbir esnaf takasa girmedi."
+    },
+    "uncappedSettle": {
+      "merchants": 10000,
+      "status": "success",
+      "receiptGasUsed": "70004263",
+      "gasUsedEvent": "69978729"
+    }
+  },
+  "monad": {
+    "chainId": 10143,
+    "contract": "0x4e212ec77ef2d0a2588e0337da72b7cf41434492",
+    "invoicesPerMerchant": 2,
+    "budgetMon": "150",
+    "points": [
+      {
+        "merchants": 500,
+        "invoices": 1000,
+        "ok": true,
+        "gasEstimate": "1466068",
+        "gasPerMerchant": 2932,
+        "fitsBlock": true
+      },
+      {
+        "merchants": 2000,
+        "invoices": 4000,
+        "ok": true,
+        "gasEstimate": "5570695",
+        "gasPerMerchant": 2785,
+        "fitsBlock": true
+      },
+      {
+        "merchants": 5000,
+        "invoices": 10000,
+        "ok": true,
+        "gasEstimate": "13727411",
+        "gasPerMerchant": 2745,
+        "fitsBlock": true
+      },
+      {
+        "merchants": 10000,
+        "invoices": 20000,
+        "ok": true,
+        "gasEstimate": "27212368",
+        "gasPerMerchant": 2721,
+        "fitsBlock": true
+      }
+    ],
+    "realSettle": {
+      "merchants": 10000,
+      "invoices": 20000,
+      "txHash": "0xa7adf24e16719ab9f4a7dd9f05198ab7f03eea0e63dc0a0ca49a476cc9ad5ab3",
+      "explorer": "https://testnet.monadexplorer.com/tx/0xa7adf24e16719ab9f4a7dd9f05198ab7f03eea0e63dc0a0ca49a476cc9ad5ab3",
+      "status": "success",
+      "gasLimit": "28592986",
+      "receiptGasUsed": "28592986",
+      "gasUsedEvent": "26971768",
+      "block": "73779786"
+    },
+    "stoppedBecause": null,
+    "spentMon": "34.33887579"
+  }
+}

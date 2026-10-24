@@ -1,7 +1,7 @@
 // TAKAS settle() referans uygulaması (bağımsız, sade JS).
 // Kontrattan farklı olarak her dışlama turunda her şeyi baştan hesaplar; sonuçlar birebir aynı olmalı.
 //
-// Kullanım (forge FFI): node test/js/takas-ref.js <seed>
+// Kullanım (forge FFI): node test/js/takas-ref.cjs <seed>
 //   → rastgele senaryo + beklenen sonuçlar, abi.encode(uint256[]) olarak hex.
 
 "use strict";

@@ -1,0 +1,424 @@
+:root {
+  --bg: #f7f1e5;
+  --paper: #fffaf0;
+  --ink: #12302f;
+  --ink-soft: #4f6b69;
+  --teal: #0f3d3e;
+  --teal-2: #1c6b66;
+  --amber: #f2a541;
+  --amber-ink: #6b3f00;
+  --red: #b3412f;
+  --green: #2b7a4b;
+  --line: #e3d8c2;
+  --shadow: 0 1px 0 rgba(18, 48, 47, 0.06), 0 8px 24px rgba(18, 48, 47, 0.08);
+  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: var(--teal-2);
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- ortak ---------- */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.card h2 {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+
+.btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-weight: 700;
+  font-size: 17px;
+  background: var(--teal);
+  color: #fff;
+  min-height: 48px;
+  transition: transform 0.08s ease, opacity 0.15s ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn.amber {
+  background: var(--amber);
+  color: #2a1700;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--teal);
+  border: 2px solid var(--teal);
+}
+
+.btn.block {
+  width: 100%;
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+.err {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.ok {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #efe5d0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.brand .logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--teal);
+  display: grid;
+  place-items: center;
+}
+
+nav.links {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+}
+
+/* ---------- telefon ---------- */
+.phone {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 16px calc(32px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 14px;
+}
+
+.balance {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.addr {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  border: 2px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink);
+  min-height: 48px;
+}
+
+.chip.on {
+  border-color: var(--teal);
+  background: var(--teal);
+  color: #fff;
+}
+
+.merchant-list {
+  display: grid;
+  gap: 8px;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.merchant {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  border: 2px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--ink);
+  min-height: 48px;
+  font-weight: 600;
+}
+
+.merchant.on {
+  border-color: var(--amber);
+  background: #fff3de;
+}
+
+.debts {
+  display: grid;
+  gap: 6px;
+  font-size: 15px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.net {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.result {
+  background: var(--teal);
+  color: #fff;
+  border: 0;
+}
+
+.result h2 {
+  color: #bfe3dd;
+}
+
+.result .big {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--amber);
+}
+
+.result a {
+  color: #ffd79a;
+}
+
+/* ---------- büyük ekran ---------- */
+.screen {
+  min-height: 100vh;
+  padding: 22px 28px 28px;
+  display: grid;
+  gap: 18px;
+  grid-template-rows: auto 1fr;
+}
+
+.screen-grid {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+.qr {
+  width: 100%;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px;
+}
+
+.counters {
+  display: grid;
+  gap: 14px;
+}
+
+.counter {
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--teal);
+  color: #fff;
+}
+
+.counter small {
+  display: block;
+  color: #bfe3dd;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.counter .val {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.counter .val em {
+  font-style: normal;
+  color: var(--amber);
+}
+
+.counter .arrow {
+  font-size: 24px;
+  color: var(--amber);
+  margin: 0 8px;
+}
+
+.counter.amber {
+  background: var(--amber);
+  color: #2a1700;
+}
+
+.counter.amber small {
+  color: #6b3f00;
+}
+
+.counter.amber .val em {
+  color: #2a1700;
+}
+
+.graph {
+  width: 100%;
+  height: auto;
+  background: var(--paper);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+}
+
+.compare {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.bar {
+  height: 14px;
+  border-radius: 7px;
+  background: var(--teal-2);
+}
+
+.bar.eth {
+  background: #8a8a8a;
+}
+
+@media (max-width: 1100px) {
+  .screen-grid {
+    grid-template-columns: 1fr;
+  }
+  .screen {
+    padding: 14px;
+  }
+}
+
+/* ---------- ölçüm ---------- */
+.wide {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px 16px 40px;
+  display: grid;
+  gap: 16px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  text-align: right;
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+
+input[type="text"],
+input[type="password"] {
+  font: inherit;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: #fff;
+  min-height: 48px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: -2px;
+  margin-right: 6px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

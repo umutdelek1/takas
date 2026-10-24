@@ -8,3 +8,4 @@ broadcast/
 dist/
 .vercel
 *.log
+.claude
