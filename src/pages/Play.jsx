@@ -1,5 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CONTRACT, DEBT_CHOICES, EXPLORER, TEMP_COLLATERAL, client, loadWallet, trError, write } from "../lib/chain.js";
+import {
+  CONTRACT,
+  DEBT_CHOICES,
+  EXPLORER,
+  TEMP_COLLATERAL,
+  client,
+  connectInjected,
+  hasInjected,
+  loadWallet,
+  trError,
+  write,
+} from "../lib/chain.js";
 import { postJson, useTakasState } from "../lib/api.js";
 import { mon, monLabel, shortAddr } from "../lib/format.js";
 import { companyName, initials } from "../lib/names.js";
@@ -9,7 +20,12 @@ const DRIP_KEY = "takas.dripAsked";
 const lc = (s) => (s || "").toLowerCase();
 
 export default function Play() {
-  const account = useMemo(() => loadWallet(), []);
+  // Varsayılan: tarayıcıda üretilen geçici cüzdan. İsteğe bağlı: MetaMask (ext).
+  const burner = useMemo(() => loadWallet(), []);
+  const [ext, setExt] = useState(null);
+  const [extMsg, setExtMsg] = useState("");
+  const account = ext ?? burner;
+  const injectedAvailable = useMemo(() => hasInjected(), []);
   const { state, error: stateError, refresh } = useTakasState(2000);
   const [balance, setBalance] = useState(null);
   const [dripMsg, setDripMsg] = useState("");
@@ -63,6 +79,24 @@ export default function Play() {
     }
     if (!asked) askDrip();
   }, [askDrip]);
+
+  // ---- cüzdan değişince önceki cüzdanın durumu taşınmaz ----
+  useEffect(() => {
+    prev.current = { session: null, me: null };
+    setResult(null);
+    setTarget(null);
+    setBalance(null);
+  }, [account.address]);
+
+  async function connectMetaMask() {
+    setExtMsg("MetaMask'ta onay bekleniyor…");
+    try {
+      setExt(await connectInjected());
+      setExtMsg("");
+    } catch (e) {
+      setExtMsg(trError(e));
+    }
+  }
 
   // ---- takas sonucu ----
   useEffect(() => {
@@ -142,10 +176,31 @@ export default function Play() {
             {dripMsg}
           </p>
         )}
-        {balance === 0n && (
+        {(balance === 0n || (ext && balance !== null && balance < TEMP_COLLATERAL)) && (
           <button className="btn ghost block" style={{ marginTop: 12 }} onClick={askDrip}>
             MON iste
           </button>
+        )}
+        {ext ? (
+          <>
+            <p className="muted" style={{ marginTop: 10 }}>
+              MetaMask cüzdanı kullanılıyor.
+            </p>
+            <button className="btn ghost block" style={{ marginTop: 8 }} onClick={() => setExt(null)}>
+              Geçici cüzdana dön
+            </button>
+          </>
+        ) : (
+          injectedAvailable && (
+            <button className="btn ghost block" style={{ marginTop: 12 }} onClick={connectMetaMask}>
+              MetaMask ile bağlan
+            </button>
+          )
+        )}
+        {extMsg && (
+          <p className={extMsg.includes("bekleniyor") ? "muted" : "err"} style={{ marginTop: 8 }}>
+            {extMsg}
+          </p>
         )}
       </section>
 

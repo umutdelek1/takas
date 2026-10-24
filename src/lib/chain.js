@@ -1,4 +1,4 @@
-import { createPublicClient, defineChain, encodeFunctionData, http, parseEther } from "viem";
+import { createPublicClient, createWalletClient, custom, defineChain, encodeFunctionData, getAddress, http, parseEther } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import deployment from "../deployment.js";
 import { takasAbi } from "../abi.js";
@@ -55,7 +55,66 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
  * olduğundan ve aynı anda gönderilen işlemlerde depolama durumu kayabildiğinden, tahmin tek başına
  * yetmeyebilir. Yeni gelen MON'u RPC henüz görmüyorsa tahmin başarısız olur; birkaç saniye beklenir.
  */
+// ---- isteğe bağlı MetaMask (tarayıcı cüzdanı) ----
+
+export const hasInjected = () => typeof window !== "undefined" && !!window.ethereum;
+
+const MONAD_PARAMS = {
+  chainId: "0x279f", // 10143
+  chainName: "Monad Testnet",
+  nativeCurrency: { name: "Monad", symbol: "MON", decimals: 18 },
+  rpcUrls: ["https://testnet-rpc.monad.xyz"],
+  blockExplorerUrls: ["https://testnet.monadvision.com"],
+};
+
+/** MetaMask'a bağlanır, gerekirse Monad Testnet'e geçer ya da ağı ekler. */
+export async function connectInjected() {
+  const eth = window.ethereum;
+  const [raw] = await eth.request({ method: "eth_requestAccounts" });
+  const current = await eth.request({ method: "eth_chainId" });
+  if (parseInt(current, 16) !== chain.id) {
+    try {
+      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: MONAD_PARAMS.chainId }] });
+    } catch (e) {
+      const m = String(e?.message || "").toLowerCase();
+      if (e?.code === 4902 || m.includes("unrecognized") || m.includes("not been added") || m.includes("4902")) {
+        await eth.request({ method: "wallet_addEthereumChain", params: [MONAD_PARAMS] });
+      } else {
+        throw e;
+      }
+    }
+  }
+  const address = getAddress(raw);
+  return { address, injected: true, wallet: createWalletClient({ account: address, chain, transport: custom(eth) }) };
+}
+
+/** MetaMask ile yazma: aynı +30.000 gas payı; imza ve gönderim cüzdanda, onay 500 ms aralıkla sorulur. */
+async function writeInjected(acc, functionName, args, value) {
+  const est = await client.estimateContractGas({ address: CONTRACT, abi: takasAbi, functionName, args, account: acc.address, value });
+  const hash = await acc.wallet.writeContract({
+    address: CONTRACT,
+    abi: takasAbi,
+    functionName,
+    args,
+    value,
+    gas: est + 30_000n,
+    account: acc.address,
+    chain,
+  });
+  const deadline = Date.now() + 60_000;
+  for (;;) {
+    const rc = await client.getTransactionReceipt({ hash }).catch(() => null);
+    if (rc) {
+      if (rc.status !== "success") throw new Error("REVERTED");
+      return { hash, rc };
+    }
+    if (Date.now() > deadline) throw new Error("timeout");
+    await sleep(500);
+  }
+}
+
 export async function write(account, functionName, args = [], value = 0n) {
+  if (account.injected) return writeInjected(account, functionName, args, value);
   // Hazırlık tek turda: gas tahmini, nonce ve ücretler aynı partide istenir.
   let est, nonce, fees;
   for (let i = 0; ; i++) {
@@ -106,6 +165,7 @@ export async function write(account, functionName, args = [], value = 0n) {
 export function trError(e) {
   const m = `${e?.shortMessage || ""} ${e?.message || ""} ${e?.cause?.message || ""}`;
   const l = m.toLowerCase();
+  if (e?.code === 4001 || l.includes("user rejected") || l.includes("user denied")) return "İşlemi cüzdanda onaylamadın.";
   if (m.includes("AlreadyRegistered")) return "Şirketin zaten kayıtlı.";
   if (m.includes("NotRegistered")) return "Önce şirketini kaydetmelisin.";
   if (m.includes("SelfInvoice")) return "Kendine borç yazamazsın.";
