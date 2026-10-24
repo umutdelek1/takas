@@ -13,9 +13,10 @@ import {
 import { parseEventLogs } from "viem";
 
 function tokenOk(given) {
-  const want = process.env.HOST_TOKEN || "";
+  // Ortam değişkenine satır sonu karışmış olabilir; iki taraf da temizlenerek karşılaştırılır.
+  const want = (process.env.HOST_TOKEN || "").trim();
   if (!want || typeof given !== "string") return false;
-  const a = Buffer.from(given);
+  const a = Buffer.from(given.trim());
   const b = Buffer.from(want);
   return a.length === b.length && timingSafeEqual(a, b);
 }
