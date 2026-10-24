@@ -74,6 +74,10 @@ Ham veri: [`public/bench.json`](public/bench.json). Her rakam kaynağıyla etike
 
 Güncel adresler `src/deployment.js` dosyasındadır.
 
+## Nasıl denenir
+
+Varsayılan olarak tarayıcıda geçici bir cüzdan oluşur ve otomatik test MON gelir; hiçbir şey kurmanız gerekmez. İsterseniz MetaMask ile de bağlanabilirsiniz. Not: MetaMask yeni vercel.app alan adlarını otomatik olarak 'şüpheli' işaretleyebiliyor; bu yanlış bir alarm, kontrat ve kod bu depoda açık.
+
 ## Sayfalar
 | Sayfa | Ne yapar |
 |---|---|

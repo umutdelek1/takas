@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { CONTRACT, DEBT_CHOICES, EXPLORER, TEMP_COLLATERAL, client, trError, write } from "../lib/chain.js";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CONTRACT, DEBT_CHOICES, EXPLORER, TEMP_COLLATERAL, client, loadWallet, trError, write } from "../lib/chain.js";
 import { postJson, useTakasState } from "../lib/api.js";
 import { mon, monLabel, shortAddr } from "../lib/format.js";
 import { companyName, initials } from "../lib/names.js";
-import { connectWallet, metamaskDeepLink, useExtWallet } from "../lib/wallet.js";
+import { connectWallet, useExtWallet } from "../lib/wallet.js";
 import { Brand } from "./Brand.jsx";
 import { WalletButton } from "./WalletButton.jsx";
 
@@ -11,10 +11,11 @@ const lc = (s) => (s || "").toLowerCase();
 const dripKey = (a) => `takas.drip.${lc(a)}`;
 
 export default function Play() {
-  // MetaMask zorunlu: kayıt ve borç yazma bağlı cüzdanla, Monad Testnet'te imzalanır.
-  const { ext, msg: walletMsg, available } = useExtWallet();
-  const ready = !!ext && ext.chainOk;
-  const account = ext ?? { address: null };
+  // Varsayılan: tarayıcıda üretilen geçici cüzdan. Header'dan MetaMask bağlanırsa işlemler onunla imzalanır.
+  const burner = useMemo(() => loadWallet(), []);
+  const { ext } = useExtWallet();
+  const ready = !ext || ext.chainOk;
+  const account = ext ?? burner;
   const { state, error: stateError, refresh } = useTakasState(2000);
   const [balance, setBalance] = useState(null);
   const [dripMsg, setDripMsg] = useState("");
@@ -153,34 +154,6 @@ export default function Play() {
         <WalletButton />
       </div>
 
-      {!ext && (
-        <section className="card">
-          <h2>Cüzdanını bağla</h2>
-          <p style={{ marginBottom: 14 }}>
-            TAKAS'ta kayıt ve borç yazma MetaMask ile imzalanır. Bağlanınca Monad Testnet MetaMask'a otomatik eklenir ve seçilir.
-          </p>
-          {available ? (
-            <button className="btn block" onClick={connectWallet} disabled={walletMsg.includes("bekleniyor")}>
-              {walletMsg.includes("bekleniyor") ? "Onay bekleniyor…" : "MetaMask ile bağlan"}
-            </button>
-          ) : (
-            <>
-              <a className="btn block" href={metamaskDeepLink()}>
-                MetaMask uygulamasında aç
-              </a>
-              <a className="btn ghost block" style={{ marginTop: 8 }} href="https://metamask.io/download" target="_blank" rel="noreferrer">
-                MetaMask yükle
-              </a>
-            </>
-          )}
-          {walletMsg && !walletMsg.includes("bekleniyor") && (
-            <p className="err" style={{ marginTop: 8 }}>
-              {walletMsg}
-            </p>
-          )}
-        </section>
-      )}
-
       {ext && !ext.chainOk && (
         <section className="card">
           <h2>Ağ</h2>
@@ -195,7 +168,9 @@ export default function Play() {
         <section className="card">
           <h2>Cüzdan</h2>
           <div className="balance num">{balance === null ? "…" : `${mon(balance)} MON`}</div>
-          <div className="addr num">{shortAddr(account.address)} · MetaMask · Monad Testnet</div>
+          <div className="addr num">
+            {shortAddr(account.address)} · {ext ? "MetaMask" : "Geçici cüzdan"} · Monad Testnet
+          </div>
           {dripMsg && (
             <p className={dripMsg.startsWith("MON alınamadı") ? "err" : "muted"} style={{ marginTop: 8 }}>
               {dripMsg}
@@ -205,6 +180,11 @@ export default function Play() {
             <button className="btn ghost block" style={{ marginTop: 12 }} onClick={askDrip}>
               Test MON iste
             </button>
+          )}
+          {!ext && (
+            <p className="muted small" style={{ marginTop: 10 }}>
+              Hiçbir şey kurman gerekmez. İstersen üstteki butondan MetaMask ile de bağlanabilirsin.
+            </p>
           )}
         </section>
       )}
