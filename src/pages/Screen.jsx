@@ -2,14 +2,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { useBench, useTakasState } from "../lib/api.js";
 import { EXPLORER, CONTRACT } from "../lib/chain.js";
-import { mon, monLabel, num, shortAddr } from "../lib/format.js";
-import { merchantName } from "../lib/names.js";
+import { monLabel, num, shortAddr } from "../lib/format.js";
+import { companyName, initials } from "../lib/names.js";
 import { Brand } from "./Brand.jsx";
+import { Tag } from "./Tag.jsx";
 
 const lc = (s) => (s || "").toLowerCase();
+const toMon = (wei) => Number(wei) / 1e18;
+const fmt = (n, d = 3) => n.toLocaleString("tr-TR", { maximumFractionDigits: d, minimumFractionDigits: 0 });
+
+const FADE_MS = 2200; // oklar sönerken sayaç akarak düşer
+const DONE_MS = 16000; // yeşil kart ekranda kalma süresi
 
 /** Sayıyı hedef değere akıcı biçimde taşır. */
-function useTween(target, ms = 700) {
+function useTween(target, ms = 900) {
   const [v, setV] = useState(target);
   const from = useRef(target);
   useEffect(() => {
@@ -30,21 +36,9 @@ function useTween(target, ms = 700) {
   return v;
 }
 
-const toMon = (wei) => Number(wei) / 1e18;
-const fmt = (n, d = 3) => n.toLocaleString("tr-TR", { maximumFractionDigits: d, minimumFractionDigits: 0 });
-
-function Counter({ label, children, className = "" }) {
-  return (
-    <div className={`counter ${className}`}>
-      <small>{label}</small>
-      <div className="val mono">{children}</div>
-    </div>
-  );
-}
-
-function DebtGraph({ state }) {
-  const W = 760;
-  const H = 520;
+function DebtGraph({ state, fading, quiet }) {
+  const W = 840;
+  const H = 560;
   const { nodes, edges, max } = useMemo(() => {
     const byAddr = new Map(state.members.map((m) => [lc(m.address), m]));
     const agg = new Map();
@@ -66,7 +60,7 @@ function DebtGraph({ state }) {
     const list = [...ids].sort((a, b) => a - b).slice(0, 60);
     const cx = W / 2;
     const cy = H / 2;
-    const r = Math.min(W, H) / 2 - 62;
+    const r = Math.min(W, H) / 2 - 78;
     const pos = new Map(
       list.map((id, i) => {
         const a = (i / list.length) * Math.PI * 2 - Math.PI / 2;
@@ -82,96 +76,104 @@ function DebtGraph({ state }) {
 
   if (nodes.length === 0) {
     return (
-      <div className="graph" style={{ display: "grid", placeItems: "center", minHeight: 360 }}>
-        <p className="muted" style={{ fontSize: 20 }}>
-          Henüz borç yok. Telefonundan dükkân aç, borç yaz!
-        </p>
+      <div className="empty-graph">
+        {!quiet && <p className="muted">Henüz borç yok. Telefonundan şirketini kaydet, borç yaz.</p>}
       </div>
     );
   }
-  const small = nodes.length <= 28;
+  const labels = nodes.length <= 24;
   return (
-    <svg className="graph" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Borç ağı">
+    <svg className="graph" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="İşletmeler arası borç ağı">
       <defs>
         <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0L10 5L0 10z" fill="#f2a541" />
+          <path d="M0 0L10 5L0 10z" fill="#ff6b5b" />
         </marker>
       </defs>
-      {edges.map((e, i) => {
-        const dx = e.q.x - e.p.x;
-        const dy = e.q.y - e.p.y;
-        const len = Math.hypot(dx, dy) || 1;
-        const sx = e.p.x + (dx / len) * 12;
-        const sy = e.p.y + (dy / len) * 12;
-        const ex = e.q.x - (dx / len) * 15;
-        const ey = e.q.y - (dy / len) * 15;
-        // hafif eğri: karşılıklı borçlar üst üste binmesin
-        const mx = (sx + ex) / 2 - (dy / len) * 22;
-        const my = (sy + ey) / 2 + (dx / len) * 22;
+      <g className={`edge ${fading ? "fading" : ""}`}>
+        {edges.map((e, i) => {
+          const dx = e.q.x - e.p.x;
+          const dy = e.q.y - e.p.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const sx = e.p.x + (dx / len) * 17;
+          const sy = e.p.y + (dy / len) * 17;
+          const ex = e.q.x - (dx / len) * 21;
+          const ey = e.q.y - (dy / len) * 21;
+          // hafif eğri: karşılıklı borçlar üst üste binmesin
+          const mx = (sx + ex) / 2 - (dy / len) * 22;
+          const my = (sy + ey) / 2 + (dx / len) * 22;
+          return (
+            <path
+              key={i}
+              d={`M${sx},${sy} Q${mx},${my} ${ex},${ey}`}
+              fill="none"
+              stroke="#ff6b5b"
+              strokeOpacity="0.85"
+              strokeWidth={1.4 + (e.v / max) * 4}
+              markerEnd="url(#ah)"
+            />
+          );
+        })}
+      </g>
+      {nodes.map((n) => {
+        const cos = Math.cos(n.a);
         return (
-          <path
-            key={i}
-            d={`M${sx},${sy} Q${mx},${my} ${ex},${ey}`}
-            fill="none"
-            stroke="#f2a541"
-            strokeOpacity="0.8"
-            strokeWidth={1.2 + (e.v / max) * 4}
-            markerEnd="url(#ah)"
-          />
+          <g key={n.id}>
+            <circle cx={n.x} cy={n.y} r={16} fill="#2f2948" stroke="#4a3f7a" strokeWidth="1.5" />
+            <text x={n.x} y={n.y + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#f4f1ff">
+              {initials(n.id)}
+            </text>
+            {labels && (
+              <text
+                x={n.x + cos * 26}
+                y={n.y + Math.sin(n.a) * 26 + 4}
+                textAnchor={cos > 0.2 ? "start" : cos < -0.2 ? "end" : "middle"}
+                fontSize="12"
+                fill="#a39cc4"
+              >
+                {companyName(n.id)}
+              </text>
+            )}
+          </g>
         );
       })}
-      {nodes.map((n) => (
-        <g key={n.id}>
-          <circle cx={n.x} cy={n.y} r={11} fill="#0f3d3e" />
-          <text x={n.x} y={n.y + 4} textAnchor="middle" fontSize="10" fontWeight="700" fill="#fff">
-            {merchantName(n.id)[0]}
-          </text>
-          {small && (
-            <text
-              x={n.x + Math.cos(n.a) * 22}
-              y={n.y + Math.sin(n.a) * 22 + 4}
-              textAnchor={Math.cos(n.a) > 0.2 ? "start" : Math.cos(n.a) < -0.2 ? "end" : "middle"}
-              fontSize="12"
-              fill="#12302f"
-            >
-              {merchantName(n.id)}
-            </text>
-          )}
-        </g>
-      ))}
     </svg>
   );
 }
 
 function Compare({ bench }) {
-  if (!bench?.monad || !bench?.ethereum) {
-    return <p className="muted">Ölçüm sonuçları hazırlanıyor.</p>;
-  }
-  const eth = bench.ethereum;
-  const firstOver = eth.points.find((p) => !p.fitsCap);
-  const perEth = firstOver ? firstOver.gasPerMerchant : eth.points[eth.points.length - 1].gasPerMerchant;
-  const ethMax = Math.floor(Number(eth.txGasCap) / perEth);
-  const real = bench.monad.realSettle;
-  const monMax = real?.merchants ?? bench.monad.points.filter((p) => p.ok).at(-1)?.merchants ?? 0;
-  const top = Math.max(ethMax, monMax, 1);
+  const real = bench?.monad?.realSettle;
+  const derived = bench?.ethereum?.derived;
+  if (!real || !derived) return <p className="muted">Ölçüm sonuçları hazırlanıyor.</p>;
+  const monMax = real.merchants;
+  const ethMax = derived.maxMerchantsPerTx;
+  const top = Math.max(monMax, ethMax, 1);
   return (
     <div className="compare">
       <div>
         <div className="row">
-          <b>Monad</b>
-          <span className="mono">{num(monMax)} esnaf / tek işlem</span>
+          <b>Monad testnet</b>
+          <Tag kind={real.kind} />
+        </div>
+        <div className="row" style={{ marginTop: 4 }}>
+          <span className="num">{num(monMax)} işletme · {num(real.invoices)} fatura</span>
+          <a href={real.explorer} target="_blank" rel="noreferrer">
+            işlem
+          </a>
         </div>
         <div className="bar" style={{ width: `${(monMax / top) * 100}%` }} />
       </div>
       <div>
         <div className="row">
-          <b>Ethereum</b>
-          <span className="mono">≈ {num(ethMax)} esnaf / tek işlem</span>
+          <b>Ethereum kuralları</b>
+          <Tag kind={derived.kind} />
+        </div>
+        <div className="row" style={{ marginTop: 4 }}>
+          <span className="num">≈ {num(ethMax)} işletme / işlem</span>
         </div>
         <div className="bar eth" style={{ width: `${(ethMax / top) * 100}%` }} />
       </div>
       <p className="muted" style={{ fontSize: 12 }}>
-        Ethereum'da işlem başına gas sınırı {num(eth.txGasCap)} (EIP-7825). Aynı kontrat, esnaf başına 2 fatura.{" "}
+        İşlem başı gas sınırı {num(bench.ethereum.txGasCap)} (EIP-7825); sınırı aşan boyutta gerçek settle() düştü.{" "}
         <a href="#/olcum">Ayrıntılar</a>
       </p>
     </div>
@@ -184,22 +186,56 @@ export default function Screen() {
   const [qr, setQr] = useState("");
   const link = `${location.origin}/#/play`;
 
+  const prev = useRef(null);
+  const timers = useRef([]);
+  const [phase, setPhase] = useState("idle"); // idle | fading | done
+  const [dying, setDying] = useState(null);
+  const [fadeOn, setFadeOn] = useState(false);
+  const [done, setDone] = useState(null);
+
   useEffect(() => {
-    QRCode.toDataURL(link, { margin: 1, width: 560, color: { dark: "#0f3d3e", light: "#ffffff" } })
+    QRCode.toDataURL(link, { margin: 1, width: 560, color: { dark: "#120f1d", light: "#ffffff" } })
       .then(setQr)
       .catch(() => setQr(""));
   }, [link]);
+
+  // TAKAS anı: oklar söner, sayaç düşer, yeşil kart gelir.
+  useEffect(() => {
+    if (!state) return;
+    const before = prev.current;
+    prev.current = state;
+    if (!before || state.session <= before.session || !state.lastSettle || state.lastSettle.stats.invoices === 0) return;
+    const after = (ms, fn) => timers.current.push(setTimeout(fn, ms));
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    setDying(before);
+    setDone(null);
+    setFadeOn(false);
+    setPhase("fading");
+    after(60, () => setFadeOn(true));
+    after(FADE_MS, () => {
+      setPhase("done");
+      setDone(state.lastSettle);
+    });
+    after(FADE_MS + DONE_MS, () => {
+      setPhase("idle");
+      setDying(null);
+      setDone(null);
+    });
+  }, [state]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const openTotal = state ? state.invoices.reduce((s, i) => s + Number(i.amountWei), 0) / 1e18 : 0;
   const cash = state ? toMon(state.preview.cashWei) : 0;
   const cumSaved = state ? toMon(BigInt(state.cumulative.grossWei) - BigInt(state.cumulative.cashWei)) : 0;
   const treasury = state ? toMon(state.feeBalanceWei) : 0;
 
-  const tOpen = useTween(openTotal);
-  const tCash = useTween(cash);
-  const tSaved = useTween(cumSaved);
-  const tTreasury = useTween(treasury);
+  const tOpen = useTween(openTotal, FADE_MS);
+  const tCash = useTween(cash, FADE_MS);
+  const tSaved = useTween(cumSaved, 1400);
+  const tTreasury = useTween(treasury, 1400);
   const last = state?.lastSettle;
+  const graphState = phase === "fading" && dying ? dying : state;
 
   return (
     <div className="screen">
@@ -213,83 +249,129 @@ export default function Screen() {
       </div>
 
       <div className="screen-grid">
-        <div style={{ display: "grid", gap: 16 }}>
+        <div className="col">
           <section className="card" style={{ textAlign: "center" }}>
             <h2>Katıl</h2>
-            {qr ? <img className="qr" src={qr} alt="Katılmak için QR kodu okut" /> : <div className="qr" style={{ aspectRatio: "1" }} />}
-            <p style={{ marginTop: 8, fontWeight: 700 }}>Telefonunla okut, dükkânını aç</p>
-            <p className="muted" style={{ fontSize: 12, wordBreak: "break-all" }}>
+            {qr ? <img className="qr" src={qr} alt="Katılmak için QR kodunu okut" /> : <div className="qr" style={{ aspectRatio: "1" }} />}
+            <p style={{ marginTop: 10, fontWeight: 600 }}>Okut, şirketini kaydet</p>
+            <p className="muted num" style={{ fontSize: 12, wordBreak: "break-all" }}>
               {link}
             </p>
           </section>
           <section className="card">
-            <h2>Çarşı</h2>
-            <div className="row">
-              <span className="muted">Esnaf</span>
-              <b className="mono">{state ? num(state.memberCount) : "…"}</b>
+            <h2>Ağ</h2>
+            <div className="stat-lines">
+              <div className="row">
+                <span className="muted">İşletme</span>
+                <b className="num">{state ? num(state.memberCount) : "…"}</b>
+              </div>
+              <div className="row">
+                <span className="muted">Açık fatura</span>
+                <b className="num">{state ? num(state.invoiceCount) : "…"}</b>
+              </div>
+              <div className="row">
+                <span className="muted">Yapılan takas</span>
+                <b className="num">{state ? num(state.session) : "…"}</b>
+              </div>
+              <div className="row">
+                <span className="muted">Ücret / fatura</span>
+                <b className="num">{state ? monLabel(state.feeWei, 5) : "…"}</b>
+              </div>
             </div>
-            <div className="row">
-              <span className="muted">Açık fatura</span>
-              <b className="mono">{state ? num(state.invoiceCount) : "…"}</b>
-            </div>
-            <div className="row">
-              <span className="muted">Yapılan takas</span>
-              <b className="mono">{state ? num(state.session) : "…"}</b>
-            </div>
-            <div className="row">
-              <span className="muted">Ücret / fatura</span>
-              <b className="mono">{state ? monLabel(state.feeWei, 5) : "…"}</b>
-            </div>
+            <p className="muted" style={{ fontSize: 12, marginTop: 12 }}>
+              Şirket adları kurgusaldır.
+            </p>
+          </section>
+          <section className="card fact">
+            <h2>Neden TAKAS?</h2>
+            <div className="fact-num num debt">270 milyar TL</div>
+            <p style={{ marginTop: 6 }}>karşılıksız çek</p>
+            <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>
+              2026 ilk 9 ay, TBB Risk Merkezi
+            </p>
           </section>
         </div>
 
-        <div style={{ display: "grid", gap: 16 }}>
+        <div className="col">
           {error && !state && <div className="card err">Bağlantı kurulamadı: {error}</div>}
-          {state ? <DebtGraph state={state} /> : <div className="graph" style={{ minHeight: 360 }} />}
-          <section className="card">
-            <h2>Son takas</h2>
-            {last ? (
-              <>
-                <div className="row" style={{ flexWrap: "wrap" }}>
-                  <b>Takas #{last.session}</b>
-                  <span>
-                    {num(last.stats.invoices)} fatura · {num(last.stats.participants)} katılımcı · {num(last.stats.excluded)} dışlanan
-                  </span>
+          <div className="graph-wrap">
+            {graphState ? <DebtGraph state={graphState} fading={phase === "fading" && fadeOn} quiet={phase !== "idle"} /> : <div className="empty-graph" />}
+            {phase === "done" && done && (
+              <div className="done-card" role="status">
+                <h2>TAKAS TAMAM</h2>
+                <div className="pair">
+                  <div>
+                    <small>İşletmelerin nakit tasarrufu</small>
+                    <div className="n num">
+                      {fmt(toMon(done.stats.savedWei))} <span className="unit">MON</span>
+                    </div>
+                  </div>
+                  <div>
+                    <small>TAKAS kazancı</small>
+                    <div className="n num">
+                      {fmt(toMon(done.stats.feesWei), 4)} <span className="unit">MON</span>
+                    </div>
+                  </div>
                 </div>
-                <p style={{ marginTop: 6 }}>
-                  {monLabel(last.stats.grossWei)} borç yerine yalnızca <b>{monLabel(last.stats.cashWei)}</b> nakit el değiştirdi.{" "}
-                  <a href={last.explorer} target="_blank" rel="noreferrer">
+                <p style={{ marginTop: 16, fontWeight: 500 }}>
+                  {num(done.stats.invoices)} fatura, {num(done.stats.participants)} işletme: {monLabel(done.stats.grossWei)} borç yerine yalnızca{" "}
+                  {monLabel(done.stats.cashWei)} nakit el değiştirdi.{" "}
+                  <a href={done.explorer} target="_blank" rel="noreferrer">
                     İşlemi gör
                   </a>
                 </p>
-              </>
+              </div>
+            )}
+          </div>
+          <section className="card">
+            <h2>Son takas</h2>
+            {last ? (
+              <div className="row" style={{ flexWrap: "wrap" }}>
+                <b>Takas #{last.session}</b>
+                <span className="num">
+                  {num(last.stats.invoices)} fatura · {num(last.stats.participants)} işletme · {monLabel(last.stats.cashWei)} nakit
+                </span>
+                <a href={last.explorer} target="_blank" rel="noreferrer">
+                  İşlemi gör
+                </a>
+              </div>
             ) : (
               <p className="muted">Henüz takas yapılmadı.</p>
             )}
           </section>
         </div>
 
-        <div className="counters">
-          <Counter label="Borç → gereken nakit">
-            {fmt(tOpen)} <span className="arrow">→</span>
-            <em>{fmt(tCash)}</em>
-            <span style={{ fontSize: 16 }}> MON</span>
-          </Counter>
-          <Counter label="Esnaf tasarrufu" className="amber">
-            <em>{fmt(tSaved)}</em>
-            <span style={{ fontSize: 16 }}> MON</span>
-          </Counter>
-          <Counter label="TAKAS kasası">
-            <em>{fmt(tTreasury, 4)}</em>
-            <span style={{ fontSize: 16 }}> MON</span>
-          </Counter>
+        <div className="col">
+          <div className="counter flow">
+            <small>Borç → Gereken nakit</small>
+            <div className="val num">
+              <span className="debt">{fmt(tOpen)}</span>
+              <span className="arrow">→</span>
+              <span>{fmt(tCash)}</span>
+              <span className="unit">MON</span>
+            </div>
+          </div>
+          <div className="counter">
+            <small>İşletmelerin nakit tasarrufu</small>
+            <div className="val num credit">
+              {fmt(tSaved)}
+              <span className="unit">MON</span>
+            </div>
+          </div>
+          <div className="counter">
+            <small>TAKAS kazancı</small>
+            <div className="val num" style={{ color: "var(--accent)" }}>
+              {fmt(tTreasury, 4)}
+              <span className="unit">MON</span>
+            </div>
+          </div>
           <section className="card">
-            <h2>Monad / Ethereum</h2>
+            <h2>20.000 fatura, tek işlem</h2>
             <Compare bench={bench} />
           </section>
           <p className="muted" style={{ fontSize: 12 }}>
             Kontrat:{" "}
-            <a href={`${EXPLORER}/address/${CONTRACT}`} target="_blank" rel="noreferrer">
+            <a href={`${EXPLORER}/address/${CONTRACT}`} target="_blank" rel="noreferrer" className="num">
               {shortAddr(CONTRACT)}
             </a>
           </p>

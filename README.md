@@ -1,38 +1,65 @@
-﻿# TAKAS
+# TAKAS: İşletmeler arası zincir üstü takas odası
 
-**Esnaf için zincir üstü çok taraflı borç netleştirme.** Monad Blitz projesi.
+**Canlı demo:** https://takas-six.vercel.app · **Ağ:** Monad Testnet
 
-Esnaf birbirine sürekli borçlanır: manav toptancıya, toptancı nakliyeciye, nakliyeci manava. Her fatura ayrı ayrı nakitle kapanınca gereksiz para dolaşır. TAKAS bütün açık faturaları **tek atomik işlemde** netleştirir: herkes yalnızca **net** borcunu öder, döngüler nakitsiz kapanır.
+## Problem
+Türkiye'de 2026'nın ilk 9 ayında 257.985 karşılıksız çek yazıldı, toplam 270 milyar TL (TBB Risk Merkezi, yıllık +%50). Bunun bir kısmı nakit sıkışıklığından geliyor: KOBİ'ler ve tedarik zincirleri birbirine zincirleme borçlu. A, B'ye; B, C'ye; C, A'ya borçlu. Herkes alacaklı, ama herkes nakit arıyor.
 
-> Canlı uygulama: **https://takas-six.vercel.app**
-> Telefon: https://takas-six.vercel.app/#/play · Büyük ekran: https://takas-six.vercel.app/#/ · Ölçüm: https://takas-six.vercel.app/#/olcum
-> Ağ: Monad testnet (chainId 10143)
+## Çözüm
+TAKAS, işletmelerin birbirine olan borçlarını **tek bir atomik işlemde** çok taraflı olarak netleştirir. Herkes sadece **net** borcunu öder.
 
-## Nasıl çalışır
+- **Kayıt:** İşletme kayıt olur ve MON teminat yatırır.
+- **Fatura:** Borçlu kendi borcunu yazar (`owe`). Sahte fatura kesilemez.
+- **Takas:** `settle()` tüm açık faturaları tek işlemde netleştirir. Net borçlunun teminatından düşülür, net alacaklıya eklenir.
+- **Dışlama:** Teminatı net borcuna yetmeyen işletme o seansta dışlanır. Faturaları bir sonraki takasa kalır, zincir bozulmaz.
+- **Sicil:** Zamanında kapanan borçlar zincir üstü sicile işlenir.
 
-1. `register()` (payable): esnaf kayıt olur, MON teminat yatırır. `deposit()` / `withdraw()` ile teminat ekler veya çeker.
-2. `owe(alacakli, tutar)`: **borçlu** kendi borcunu yazar. Kimse başkası adına fatura kesemez.
-3. `settle()` (herkese açık): tüm açık faturalar tek işlemde netleşir.
-   - Her esnaf net borcunu teminatından öder, net alacaklıların teminatı artar.
-   - Teminatı `net borç + kapanacak fatura × ücret` tutarını karşılamayan esnaf, faturalarıyla birlikte o seanstan dışlanır. Dışlama, durum sabitlenene kadar tekrar hesaplanır. Dışlanan faturalar sonraki seansa kalır.
-   - Her esnafın **sicil**i (kapanan borç faturası sayısı) artar.
-4. `previewSettle()` (view): sonucu önceden gösterir.
+Varsayımsal örnek: 230 MON'luk bir borç zinciri yalnızca 40 MON nakit hareketiyle kapanabilir. Gerçek oran faturaların grafiğine bağlıdır; canlı demoda büyük ekran "borç → gereken nakit" sayacını gerçek verilerle gösterir.
 
-**Gelir modeli:** Takasta kapanan her fatura için sabit takas ücreti (0,0005 MON) borçlunun teminatından kesilir ve kontrattaki kasada birikir. Kurucu `setFee()` ile ücreti ayarlar, `withdrawFees()` ile kasayı çeker.
+## İş modeli (kazan-kazan)
+- **İşletme kazanır:** Nakit ihtiyacı büyük ölçüde azalır, karşılıksız çek riski düşer.
+- **TAKAS kazanır:** Takasta kapanan her fatura için küçük sabit bir ücret (0,0005 MON), borçlunun teminatından kesilip kasada birikir. Yani yalnızca işletmeye kazandırdığımızdan pay alırız. Kurucu `setFee()` ile ücreti ayarlar, `withdrawFees()` ile kasayı çeker.
+- **Yol haritası:** Boştaki teminatın getirisi (Monad üzerindeki borç verme protokolleri), alacağını erken nakde çevirme (faktoring), ticaret odaları ve tedarik ağları için kurumsal lisans.
 
-`Settled` olayı ve `previewSettle()` şunları döndürür: kapanan fatura, katılımcı, dışlanan, brüt borç, el değiştiren nakit, esnafın nakit tasarrufu (brüt − nakit), toplam ücret, kullanılan gas.
+## Neden Monad? (ölçüldü)
+Takas, tüm defteri tek işlemde okuyup günceller. Bu iş depolama ağırlıklıdır.
+
+| | Monad Testnet | Ethereum kuralları (anvil, EIP-7825) |
+|---|---|---|
+| Tek işlemde takas | **20.000 fatura / 10.000 işletme**, 26.971.768 gas (ölçüldü) | 2.500 işletmede 16,78M sınırını aşıp **düştü** (ölçüldü) |
+| Tek işleme sığan işletme | 10.000+ (ölçüldü) | ≈ 2.421 (hesaplandı) |
+| İşlem başı gas sınırı | blok gas limiti 150M; 28,6M'lik işlem geçti (ölçüldü) | 16.777.216 (EIP-7825) |
+
+Kanıt işlemi: [Monad testnet explorer](https://testnet.monadexplorer.com/tx/0xa7adf24e16719ab9f4a7dd9f05198ab7f03eea0e63dc0a0ca49a476cc9ad5ab3)
+
+Ham veri: [`public/bench.json`](public/bench.json). Her rakam kaynağıyla etiketlidir: **ölçülen** (gerçek işlem makbuzu ve `Settled` olayı), **tahmin** (`eth_estimateGas`, işlem gönderilmedi), **hesaplanan** (ölçülen değerlerden türetildi). Grafik: `/#/olcum`.
+
+| İşletme | Monad (tahmin) | Ethereum kuralları (tahmin) |
+|---:|---:|---:|
+| 500 | 1.466.068 | 3.587.735 |
+| 1.000 | – | 7.054.663 |
+| 2.000 | 5.570.695 | 14.044.362 |
+| 2.500 | – | 17.322.976 (sınırı aşıyor; gerçek işlem düştü) |
+| 5.000 | 13.727.411 | 34.810.234 |
+| 10.000 | 27.212.368 (gerçek işlem: 26.971.768) | 70.004.263 |
+
+**Tasarım: "Sayfa Defteri".** Hesaplar ve faturalar `mapping` yerine sıralı numaralarla, slot başına iki kayıt olacak şekilde yan yana tutulur. Monad'ın MIP-8 sayfa bazlı depolama fiyatlandırmasında aynı 128 slotluk sayfadaki erişimler çok ucuzdur. Monad'da darboğaz depolamadan hesaplamaya kaydığı için `settle()` bellekte işletme başına tek kelimelik paketli durumla, az döngüyle çalışır.
+
+## Kontratlar (Monad Testnet, chainId 10143)
+- Takas: [`0x670f4f68c7993d13361a1ef6987f03f3c049930d`](https://testnet.monadexplorer.com/address/0x670f4f68c7993d13361a1ef6987f03f3c049930d)
+- TakasStress (ölçüm, 10.000 işletmelik gerçek takas bu kontratta yapıldı): [`0x4e212ec77ef2d0a2588e0337da72b7cf41434492`](https://testnet.monadexplorer.com/address/0x4e212ec77ef2d0a2588e0337da72b7cf41434492)
+
+Güncel adresler `src/deployment.js` dosyasındadır.
 
 ## Sayfalar
-
-| Adres | Ne işe yarar |
+| Sayfa | Ne yapar |
 |---|---|
-| `#/` | Büyük ekran: QR, borç ağı grafiği, "borç → gereken nakit" ve "esnaf tasarrufu / TAKAS kasası" sayaçları, son takas, Monad/Ethereum karşılaştırması |
-| `#/play` | Telefon: geçici cüzdan, otomatik MON, dükkân aç, esnaf seç + borç yaz, net durum, takas sonrası sonuç kartı |
-| `#/host` | Önizleme ve TAKAS butonu (host anahtarı gerekir) |
-| `#/olcum` | `settle()` gas ölçümü grafiği ve gerçek işlemler |
+| `/#/` | Büyük ekran: QR, canlı borç ağı, "borç → gereken nakit", tasarruf ve TAKAS kazancı |
+| `/#/play` | Telefon: şirketini kaydet, borç yaz, net durum, takas sonucu |
+| `/#/host` | Takası tetikleme (token korumalı) |
+| `/#/olcum` | Monad ve Ethereum ölçüm grafiği |
 
 ## Mimari
-
 ```
 src/               Vite + React arayüzü (viem ile okuma/yazma)
 api/               Vercel serverless fonksiyonları (ayrı sunucu yok)
@@ -45,90 +72,40 @@ scripts/           deploy, ölçüm ve yardımcı betikler (Node)
 public/bench.json  ölçüm sonuçları
 ```
 
-- Telefonlar RPC anahtarını görmez; bütün istekler `/api/rpc` üzerinden geçer. Okuma yöntemleri ve işlem yayını dışındaki her şey kapalıdır.
-- `/api/state` yanıtı 1 sn önbelleğe alınır; 40 telefon aynı anda yoklasa bile RPC'ye saniyede tek istek gider.
-- `/api/drip` her adrese bir kez gönderir: alıcının bakiyesi 0 ve işlem sayısı 0 olmalıdır, kalıcı veritabanı gerekmez.
-- Telefon cüzdanı tarayıcıda üretilir ve `localStorage`'da durur. Yalnızca testnet için tasarlanmıştır.
-
-## Kontrat tasarımı (Monad için)
-
-- **Sayfa bazlı depolama (MIP-8):** Hesaplar ve faturalar mapping'de değil, sıralı numaralarla dinamik dizilerde durur; slot başına 2 kayıt paketlidir. `settle()` bitişik slotları sırayla okur. Tutarlar 1e12 wei birimiyle tutulur. Mapping yalnızca adres → numara için kullanılır.
-- **Darboğaz hesaplamadır, depolama değil:** `settle()` bellekte esnaf başına **tek kelime** kullanır (alacak, borç, fatura sayısı, teminat, dışlama bayrakları). Faturalar tek geçişte toplanır. Dışlama turlarında her şey baştan hesaplanmaz; yalnızca yeni pasifleşen faturaların katkısı geri alınır. Sıcak döngüler inline assembly ile yazıldı.
-- **TakasStress:** Ölçüm için sentetik esnaf ve fatura üretir, para giriş-çıkışı kapalıdır. Sentetik esnafın adres kaydı yazılmaz; `settle()` zaten yalnızca dizi uzunluğunu ve hesap kelimelerini okur.
-
-## Monad testnet'te bilinen davranışlar ve önlemler
-
-| Davranış | Önlem |
-|---|---|
-| Monad işlemde **gas limitinin tamamını** ücretlendirir; makbuzdaki `gasUsed` limiti gösterir. | Her işlemde limit = `eth_estimateGas` + küçük pay. Sabit büyük limit hiçbir yerde kullanılmaz. Gerçek tüketim `Settled` olayındaki `gasUsed` alanından okunur. |
-| `register` ve `owe` maliyeti hesabın çift ya da tek numaralı olmasına göre değişir (slot başına 2 hesap paketli). Aynı anda gönderilen işlemlerde tahmin yetmeyebilir. | Telefon ve betikler bu iki çağrıda tahmine **+30.000 gas** ekler. |
-| Yeni gelen MON ile hemen işlem gönderilirse RPC bazen "insufficient balance" der. | `/api/rpc`, aynı imzalı işlemi 1-2-3 sn arayla yeniden yayınlar. Tahmin aşamasında da kısa bekleme ve yeniden deneme vardır. |
-| Alchemy bazen geçerli bir işlemi reddedebilir. | Yedek RPC `https://testnet-rpc.monad.xyz` otomatik denenir. 429/5xx yanıtlarında yeniden denenir; zincirde revert olan işlem tekrar gönderilmez. |
-| Alchemy `eth_getLogs` en fazla 10 blok aralığı kabul eder. | Kontrat son takasın blok numarasını saklar (`lastSettleBlock`); `Settled` olayı tek blokluk aralıkla okunur. |
-| Onay bekleme. | İşlem makbuzu 500 ms aralıkla sorulur. |
-| Aynı host cüzdanından eşzamanlı işlemler (bağış + takas) nonce çakıştırabilir. | `sendWithRetry`, nonce çakışmasında kısa rastgele beklemeyle yeniden dener. |
-
-Telefonda teminat 0,1 MON, borç seçenekleri 0,01 / 0,02 / 0,05 MON'dur. Hata mesajları Türkçe ve anlaşılırdır.
-
-## settle() gas ölçümü
-
-Aynı kontrat (TakasStress), esnaf başına 2 fatura, iki ortamda büyütüldü. Ham veri: [`public/bench.json`](public/bench.json), grafik: `#/olcum`.
-
-| Esnaf | Monad testnet (gas) | Ethereum kuralları (gas) |
-|---:|---:|---:|
-| 500 | 1.466.068 | 3.587.735 |
-| 1.000 | – | 7.054.663 |
-| 2.000 | 5.570.695 | 14.044.362 |
-| 2.500 | – | 17.322.976 (sınırı aşıyor) |
-| 5.000 | 13.727.411 | 34.810.234 |
-| 10.000 | 27.212.368 | 70.004.263 |
-
-- **Ethereum kuralları:** `anvil --hardfork prague`; işlem başı sınır 16.777.216 (EIP-7825). 2.500 esnaflık durumda `settle()` bu limitle gönderildi ve gas yetmeyip **düştü**. Sınır içinde tek işlemde yaklaşık 2.400 esnaf takas edilebilir.
-- **Monad testnet:** 10.000 esnaf ve 20.000 fatura **tek gerçek `settle()` işleminde** kapandı. Olaydaki `gasUsed` 26.971.768, verilen limit 28.592.986 (tahmin + pay). İşlem: [explorer'da gör](https://testnet.monadexplorer.com/tx/0xa7adf24e16719ab9f4a7dd9f05198ab7f03eea0e63dc0a0ca49a476cc9ad5ab3).
-- Ölçüm için toplam 34,3 MON harcandı (bütçe 150 MON).
-
-Tablodaki değerler, her ağın kendi gas kurallarıyla alınmış `eth_estimateGas` sonuçlarıdır; Monad'da en büyük boyut ayrıca gerçek işlemle doğrulanmıştır.
-
-## Kontratlar (Monad testnet)
-
-Adresler `src/deployment.js` dosyasındadır.
+Telefonlar RPC anahtarını görmez; bütün istekler `/api/rpc` üzerinden geçer. Telefon cüzdanı tarayıcıda üretilir ve `localStorage`'da durur; yalnızca testnet içindir. Şirket adları kurgusaldır.
 
 ## Kurulum
+Gereksinimler: Node 22+, [Foundry](https://getfoundry.sh).
 
-Gerekenler: Node.js 22+, [Foundry](https://getfoundry.sh).
-
-```bash
-npm install
-cd contracts && forge test
-```
+    npm install
+    cd contracts && forge build && forge test
+    cd .. && npm run dev
 
 Testler: birim testleri, algoritmanın bağımsız JS referans uygulamasıyla (`contracts/test/js/takas-ref.cjs`) rastgele senaryolarda birebir karşılaştırma, "teminat toplamı + kasa = kontrat bakiyesi" invariant'ı ve gas ölçekleme.
 
-Yerel geliştirme (`/api` işleyicileri Vite içinde çalışır):
+Ortam değişkenleri (`contracts/.env` yerelde, Vercel'de proje ayarları; repoya girmez): `HOST_PRIVATE_KEY`, `MONAD_RPC_URL`, `HOST_TOKEN`.
+Yayın: Vercel (Vite arayüzü + `/api` serverless fonksiyonları).
 
-```bash
-npm run dev
-```
+Betikler:
 
-Ortam değişkenleri (`contracts/.env` yerelde, Vercel'de proje ayarları):
+    node scripts/deploy.mjs         # Takas + TakasStress'i yayınlar
+    node scripts/bench-eth.mjs      # anvil (prague) ölçümü
+    node scripts/bench-monad.mjs    # Monad testnet ölçümü
+    node scripts/sim.mjs 8 16       # demo için geçici işletme ve borç üretir
 
-| Ad | Açıklama |
-|---|---|
-| `HOST_PRIVATE_KEY` | Bağış ve takas işlemlerini imzalayan cüzdan (Monad testnet MON'u olmalı) |
-| `MONAD_RPC_URL` | Birincil RPC (yedek: `https://testnet-rpc.monad.xyz`) |
-| `HOST_TOKEN` | `#/host` sayfasının takas tetiklemek için kullandığı rastgele anahtar |
+## Monad testnet'te karşılaştığımız davranışlar ve önlemler
+- **Gas limiti:** Monad gas limitinin tamamını ücretlendirir; makbuzdaki `gasUsed` limiti gösterir. Limitler tahmin + küçük pay olarak verilir, gerçek tüketim `Settled` olayından okunur.
+- **Kayıt ve fatura maliyeti:** Çift ve tek numaralı kayıtlar farklı maliyetlidir. Eşzamanlı işlemler için `register` ve `owe` tahminine +30.000 gas pay eklenir.
+- **Yeni gelen bakiye:** Yeni fonlanan cüzdan hemen işlem gönderirse "insufficient balance" dönebilir. Aynı imzalı işlem 1-2-3 sn aralıklarla yeniden yayınlanır.
+- **RPC yedeği:** Sağlayıcı geçerli işlemi reddederse veya 429/5xx dönerse yedek RPC'ye (`https://testnet-rpc.monad.xyz`) geçilir. Revert eden işlem yeniden gönderilmez.
+- **Log sorguları:** Alchemy `eth_getLogs` 10 blokla sınırlı. Kontrat son takasın blok numarasını saklar; olay tek blokluk aralıkla okunur.
+- **Onay:** İşlem makbuzu 500 ms aralıkla sorulur.
 
-`.env` dosyaları git'e girmez.
-
-Dağıtım ve ölçüm betikleri:
-
-```bash
-node scripts/deploy.mjs            # Takas + TakasStress'i yayınlar, src/deployment.js'i yazar
-node scripts/bench-eth.mjs         # anvil (prague) ölçümü
-node scripts/bench-monad.mjs       # Monad testnet ölçümü
-node scripts/sim.mjs 8 16          # demo için geçici esnaf ve borç üretir
-```
+## Bilinen eksikler
+- Faturalar borçlunun kendi beyanıdır. Gerçek kullanımda e-fatura (GİB) entegrasyonu gerekir.
+- Teminat MON'dur. Gerçek kullanımda stablecoin (USDC) olmalıdır.
+- Tutarlar zincir üstünde herkese açıktır. Gizlilik ileride ele alınacaktır.
+- Ölçek testinde sentetik işletmeler kullanılmıştır. Canlı demo gerçek cüzdanlarla çalışır.
 
 ## Lisans
-
 MIT

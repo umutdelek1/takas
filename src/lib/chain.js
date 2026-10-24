@@ -81,8 +81,8 @@ export async function write(account, functionName, args = [], value = 0n) {
 export function trError(e) {
   const m = `${e?.shortMessage || ""} ${e?.message || ""} ${e?.cause?.message || ""}`;
   const l = m.toLowerCase();
-  if (m.includes("AlreadyRegistered")) return "Zaten bir dükkânın var.";
-  if (m.includes("NotRegistered")) return "Önce dükkân açmalısın.";
+  if (m.includes("AlreadyRegistered")) return "Şirketin zaten kayıtlı.";
+  if (m.includes("NotRegistered")) return "Önce şirketini kaydetmelisin.";
   if (m.includes("SelfInvoice")) return "Kendine borç yazamazsın.";
   if (m.includes("ZeroAmount")) return "Tutar sıfır olamaz.";
   if (m.includes("NotUnitMultiple")) return "Tutar çok küçük bir birime bölünemiyor.";

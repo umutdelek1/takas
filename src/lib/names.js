@@ -1,67 +1,52 @@
-// Esnaf kimlikleri hesap numarasından üretilir: meslek + isim. Türkçe hal eki için ünlü uyumu uygulanır.
+// İşletme kimlikleri hesap numarasından üretilir: soyad + sektör + şirket türü. Tüm adlar kurgusaldır.
 
-const JOBS = [
-  "Fırıncı",
-  "Manav",
-  "Kasap",
-  "Berber",
-  "Terzi",
-  "Bakkal",
-  "Çiçekçi",
-  "Kırtasiyeci",
-  "Balıkçı",
-  "Simitçi",
-  "Tamirci",
-  "Eczacı",
+const SURNAMES = [
+  "Kaya",
+  "Demir",
+  "Yıldız",
+  "Çelik",
+  "Aydın",
+  "Öztürk",
+  "Arslan",
+  "Doğan",
+  "Aslan",
+  "Kurt",
+  "Özdemir",
+  "Şahin",
+  "Koç",
+  "Polat",
+  "Erdem",
+  "Güneş",
+  "Acar",
+  "Taş",
+  "Bulut",
 ];
 
-const NAMES = [
-  "Mehmet",
-  "Ayşe",
-  "Mustafa",
-  "Fatma",
-  "Ahmet",
-  "Zeynep",
-  "Ali",
-  "Hatice",
-  "Hasan",
-  "Emine",
-  "İbrahim",
-  "Elif",
-  "Murat",
-  "Selin",
-  "Hüseyin",
-  "Gül",
-  "Osman",
-  "Deniz",
-  "Yusuf",
+const SECTORS = [
+  "Un San.",
+  "Lojistik Ltd.",
+  "Tekstil A.Ş.",
+  "Gıda San.",
+  "Ambalaj Ltd.",
+  "Metal San.",
+  "Plastik Ltd.",
+  "Boya A.Ş.",
+  "Nakliyat Ltd.",
+  "Mobilya San.",
+  "Kimya A.Ş.",
+  "Elektrik Ltd.",
 ];
 
-const VOWELS = "aeıioöuü";
-const BACK = "aıou";
+const TOTAL = SURNAMES.length * SECTORS.length; // 19 ve 12 aralarında asal: 228 benzersiz ad
 
-/** Kimlik: id < 228 için benzersiz (12 ve 19 aralarında asal); sonrası için numara eklenir. */
-export function merchantName(id) {
-  const base = `${JOBS[id % JOBS.length]} ${NAMES[id % NAMES.length]}`;
-  return id < JOBS.length * NAMES.length ? base : `${base} ${Math.floor(id / (JOBS.length * NAMES.length)) + 1}`;
+/** Şirket adı: "Kaya Un San.", "Demir Lojistik Ltd."; 228'den sonrası numaralanır. */
+export function companyName(id) {
+  const base = `${SURNAMES[id % SURNAMES.length]} ${SECTORS[id % SECTORS.length]}`;
+  return id < TOTAL ? base : `${base} ${Math.floor(id / TOTAL) + 1}`;
 }
 
-function lastVowel(word) {
-  for (let i = word.length - 1; i >= 0; i--) if (VOWELS.includes(word[i])) return word[i];
-  return "e";
-}
-
-function lower(word) {
-  return word.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase();
-}
-
-/** Yönelme hali: "Ayşe'ye", "Mehmet'e", "Fırıncı Mehmet'e", "Ali'ye". Son sözcüğe ek gelir. */
-export function toward(name) {
-  const w = lower(name.split(" ").filter((p) => !/^\d+$/.test(p)).pop());
-  const endsVowel = VOWELS.includes(w[w.length - 1]);
-  const a = BACK.includes(lastVowel(w)) ? "a" : "e";
-  const suffix = (endsVowel ? "y" : "") + a;
-  const shown = name.replace(/\s+\d+$/, "");
-  const num = name.match(/\s+(\d+)$/);
-  return `${shown}'${suffix}${num ? ` ${num[1]}` : ""}`;
+/** Rozet baş harfleri: "Kaya Un San." → "KU". */
+export function initials(id) {
+  const [surname, sector] = companyName(id).split(" ");
+  return `${surname[0]}${sector[0]}`.toLocaleUpperCase("tr-TR");
 }
