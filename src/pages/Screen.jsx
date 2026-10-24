@@ -467,7 +467,8 @@ function HostPanel({ state, refresh }) {
 }
 
 export function ScreenView({ demo = false }) {
-  const [scenario, setScenario] = useState("supply");
+  // #/demo?senaryo=maas bağlantısı maaş günü senaryosunu seçili açar.
+  const [scenario, setScenario] = useState(() => (location.hash.includes("senaryo=maas") ? "payroll" : "supply"));
   const { state, error, refresh } = useTakasState(1500, demo ? `/api/demo/state?scenario=${scenario}` : "/api/state");
   const bench = useBench();
   const [qr, setQr] = useState("");
@@ -635,6 +636,14 @@ export function ScreenView({ demo = false }) {
         <div className="col">
           {demo && <DemoPanel state={state} scenario={scenario} busy={busy} msg={msg} onPick={pick} onSettle={settle} />}
           {!demo && <HostPanel state={state} refresh={refresh} />}
+          {!demo && (
+            <section className="card payroll-link">
+              <a className="btn ghost block" href="#/demo?senaryo=maas">
+                Maaş günü senaryosu
+              </a>
+              <p className="muted small">1 şirket, 200 çalışan: tüm maaşlar tek işlemde.</p>
+            </section>
+          )}
           {showSideQr && (
             <section className="card side-qr">
               {qr ? <img className="qr" src={qr} alt="Katılmak için QR kodunu okut" /> : <div className="qr" style={{ aspectRatio: "1" }} />}

@@ -1448,3 +1448,10 @@ td:first-child {
 .link-btn:hover {
   color: var(--text);
 }
+
+.payroll-link {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  text-align: center;
+}
