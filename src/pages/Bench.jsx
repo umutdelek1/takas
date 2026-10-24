@@ -24,49 +24,49 @@ function Chart({ bench }) {
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }} role="img" aria-label="İşletme sayısına göre settle gas">
       {yTicks.map((t) => (
         <g key={t}>
-          <line x1={M.l} x2={W - M.r} y1={sy(t)} y2={sy(t)} stroke="#2f2948" />
-          <text x={M.l - 8} y={sy(t) + 4} textAnchor="end" fontSize="12" fill="#a39cc4">
+          <line x1={M.l} x2={W - M.r} y1={sy(t)} y2={sy(t)} stroke="#E4E0D8" />
+          <text x={M.l - 8} y={sy(t) + 4} textAnchor="end" fontSize="12" fill="#6B6875">
             {(t / 1e6).toFixed(0)}M
           </text>
         </g>
       ))}
       {[0, 0.25, 0.5, 0.75, 1].map((t) => (
-        <text key={t} x={sx(t * xMax)} y={H - M.b + 20} textAnchor="middle" fontSize="12" fill="#a39cc4">
+        <text key={t} x={sx(t * xMax)} y={H - M.b + 20} textAnchor="middle" fontSize="12" fill="#6B6875">
           {num(Math.round(t * xMax))}
         </text>
       ))}
-      <text x={(W + M.l) / 2} y={H - 6} textAnchor="middle" fontSize="13" fill="#a39cc4">
+      <text x={(W + M.l) / 2} y={H - 6} textAnchor="middle" fontSize="13" fill="#6B6875">
         işletme sayısı (işletme başına 2 fatura)
       </text>
-      <line x1={M.l} x2={W - M.r} y1={sy(cap)} y2={sy(cap)} stroke="#ff6b5b" strokeDasharray="6 5" strokeWidth="2" />
-      <text x={W - M.r - 4} y={sy(cap) - 6} textAnchor="end" fontSize="12" fontWeight="700" fill="#ff6b5b">
+      <line x1={M.l} x2={W - M.r} y1={sy(cap)} y2={sy(cap)} stroke="#C2410C" strokeDasharray="6 5" strokeWidth="2" />
+      <text x={W - M.r - 4} y={sy(cap) - 6} textAnchor="end" fontSize="12" fontWeight="700" fill="#C2410C">
         Ethereum işlem sınırı {num(cap)} (EIP-7825)
       </text>
-      <path d={path(eth)} fill="none" stroke="#6d6591" strokeWidth="3" />
-      <path d={path(mon)} fill="none" stroke="#8b74ff" strokeWidth="3" />
+      <path d={path(eth)} fill="none" stroke="#64748B" strokeWidth="3" />
+      <path d={path(mon)} fill="none" stroke="#6E54FF" strokeWidth="3" />
       {eth.map((p) => (
-        <circle key={`e${p.x}`} cx={sx(p.x)} cy={sy(p.y)} r="4.5" fill={p.over ? "#ff6b5b" : "#6d6591"} />
+        <circle key={`e${p.x}`} cx={sx(p.x)} cy={sy(p.y)} r="4.5" fill={p.over ? "#C2410C" : "#64748B"} />
       ))}
       {mon.map((p) => (
-        <circle key={`m${p.x}`} cx={sx(p.x)} cy={sy(p.y)} r="5" fill="#8b74ff" />
+        <circle key={`m${p.x}`} cx={sx(p.x)} cy={sy(p.y)} r="5" fill="#6E54FF" />
       ))}
       {real && real.status === "success" && (
         <g>
-          <circle cx={sx(real.merchants)} cy={sy(Number(real.gasUsedEvent))} r="9" fill="none" stroke="#2ee6a8" strokeWidth="3" />
-          <text x={sx(real.merchants) - 14} y={sy(Number(real.gasUsedEvent)) - 14} textAnchor="end" fontSize="12" fontWeight="700" fill="#2ee6a8">
+          <circle cx={sx(real.merchants)} cy={sy(Number(real.gasUsedEvent))} r="9" fill="none" stroke="#0F7B5F" strokeWidth="3" />
+          <text x={sx(real.merchants) - 14} y={sy(Number(real.gasUsedEvent)) - 14} textAnchor="end" fontSize="12" fontWeight="700" fill="#0F7B5F">
             gerçek işlem (ölçülen)
           </text>
         </g>
       )}
       {failed && (
-        <text x={sx(failed.merchants) + 8} y={sy(Number(failed.gasEstimateNeeded)) - 10} fontSize="12" fill="#ff6b5b" fontWeight="700">
+        <text x={sx(failed.merchants) + 8} y={sy(Number(failed.gasEstimateNeeded)) - 10} fontSize="12" fill="#C2410C" fontWeight="700">
           sınırda düştü (ölçülen)
         </text>
       )}
-      <g fontSize="13" fill="#f4f1ff">
-        <rect x={M.l + 10} y={M.t + 4} width="12" height="12" fill="#8b74ff" />
+      <g fontSize="13" fill="#14131A">
+        <rect x={M.l + 10} y={M.t + 4} width="12" height="12" fill="#6E54FF" />
         <text x={M.l + 28} y={M.t + 15}>Monad testnet</text>
-        <rect x={M.l + 130} y={M.t + 4} width="12" height="12" fill="#6d6591" />
+        <rect x={M.l + 130} y={M.t + 4} width="12" height="12" fill="#64748B" />
         <text x={M.l + 148} y={M.t + 15}>Ethereum kuralları (anvil, prague)</text>
       </g>
     </svg>

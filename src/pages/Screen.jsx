@@ -94,7 +94,7 @@ function DebtGraph({ state, fading }) {
     <svg className="graph" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="İşletmeler arası borç ağı">
       <defs>
         <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0L10 5L0 10z" fill="#ff6b5b" />
+          <path d="M0 0L10 5L0 10z" fill="#C2410C" />
         </marker>
       </defs>
       <g className={`edge ${fading ? "fading" : ""}`}>
@@ -109,7 +109,7 @@ function DebtGraph({ state, fading }) {
           const ex = e.q.x - (dx / len) * to;
           const ey = e.q.y - (dy / len) * to;
           if (star) {
-            return <line key={i} x1={sx} y1={sy} x2={ex} y2={ey} stroke="#ff6b5b" strokeOpacity="0.7" strokeWidth="1.4" markerEnd="url(#ah)" />;
+            return <line key={i} x1={sx} y1={sy} x2={ex} y2={ey} stroke="#C2410C" strokeOpacity="0.55" strokeWidth="1" markerEnd="url(#ah)" />;
           }
           // hafif eğri: karşılıklı borçlar üst üste binmesin
           const mx = (sx + ex) / 2 - (dy / len) * 22;
@@ -119,9 +119,9 @@ function DebtGraph({ state, fading }) {
               key={i}
               d={`M${sx},${sy} Q${mx},${my} ${ex},${ey}`}
               fill="none"
-              stroke="#ff6b5b"
-              strokeOpacity="0.85"
-              strokeWidth={1.6 + (e.v / max) * 4}
+              stroke="#C2410C"
+              strokeOpacity="0.8"
+              strokeWidth={1 + (e.v / max) * 2.2}
               markerEnd="url(#ah)"
             />
           );
@@ -131,14 +131,14 @@ function DebtGraph({ state, fading }) {
         const cos = Math.cos(n.a);
         return (
           <g key={n.id}>
-            <circle cx={n.x} cy={n.y} r={n.hub ? 28 : tiny ? 7 : 18} fill={n.hub ? "#7a62f5" : "#2f2948"} stroke="#4a3f7a" strokeWidth="1.5" />
+            <circle cx={n.x} cy={n.y} r={n.hub ? 28 : tiny ? 7 : 18} fill="#FFFFFF" stroke="#6E54FF" strokeWidth={n.hub ? 2 : 1.25} />
             {(n.hub || !tiny) && (
-              <text x={n.x} y={n.y + 5} textAnchor="middle" fontSize={n.hub ? 15 : 13} fontWeight="700" fill="#f4f1ff">
+              <text x={n.x} y={n.y + 5} textAnchor="middle" fontSize={n.hub ? 15 : 13} fontWeight="600" fill="#14131A">
                 {n.badge}
               </text>
             )}
             {n.hub && (
-              <text x={n.x} y={n.y + 50} textAnchor="middle" fontSize="15" fill="#a39cc4">
+              <text x={n.x} y={n.y + 50} textAnchor="middle" fontSize="15" fill="#6B6875">
                 {n.name}
               </text>
             )}
@@ -148,7 +148,7 @@ function DebtGraph({ state, fading }) {
                 y={n.y + Math.sin(n.a) * 28 + 5}
                 textAnchor={cos > 0.2 ? "start" : cos < -0.2 ? "end" : "middle"}
                 fontSize="15"
-                fill="#a39cc4"
+                fill="#6B6875"
               >
                 {n.name}
               </text>
@@ -157,7 +157,7 @@ function DebtGraph({ state, fading }) {
         );
       })}
       {tiny && (
-        <text x={W / 2} y={H - 8} textAnchor="middle" fontSize="15" fill="#a39cc4">
+        <text x={W / 2} y={H - 8} textAnchor="middle" fontSize="15" fill="#6B6875">
           {total} maaş faturası · ilk {nodes.length - 1} çalışan gösteriliyor
         </text>
       )}
@@ -239,7 +239,7 @@ function ResultCard({ result, onRebuild, busy, overlay }) {
   const s = result.stats;
   return (
     <div className={`done-card ${overlay ? "overlay" : ""}`} role="status">
-      <h2>TAKAS TAMAM</h2>
+      <h2>Takas tamam</h2>
       {result.scenario === "payroll" ? (
         <>
           <div className="done-headline num">{num(s.invoices)} maaş tek işlemde ödendi</div>
@@ -373,7 +373,7 @@ export function ScreenView({ demo = false }) {
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
-    QRCode.toDataURL(link, { margin: 1, width: 560, color: { dark: "#120f1d", light: "#ffffff" } })
+    QRCode.toDataURL(link, { margin: 1, width: 560, color: { dark: "#14131a", light: "#ffffff" } })
       .then(setQr)
       .catch(() => setQr(""));
   }, [link]);

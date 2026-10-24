@@ -283,7 +283,7 @@ export default function Play() {
 
       {result && (
         <section className="card result-card" role="status">
-          <h2>Takas #{result.session} · TAKAS TAMAM</h2>
+          <h2>Takas tamam · #{result.session}</h2>
           <div className="big-num num">
             {result.delta >= 0n ? "+" : "−"}
             {mon(result.delta < 0n ? -result.delta : result.delta)} MON

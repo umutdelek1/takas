@@ -1,16 +1,28 @@
+/*
+ * TAKAS — açık B2B finans teması.
+ * Tek vurgu Monad moru; alacak yeşil, borç kiremit. Gölgesiz beyaz kartlar, 1px çizgiler.
+ * Başlıklar Instrument Serif, metin Inter, rakamlar JetBrains Mono (tabular).
+ */
 :root {
-  --bg: #120f1d;
-  --card: #1b1729;
-  --line: #2f2948;
-  --text: #f4f1ff;
-  --text-2: #a39cc4;
-  --accent: #8b74ff;
-  --btn: #7a62f5;
-  --credit: #2ee6a8;
-  --debt: #ff6b5b;
-  --ink-on-green: #06271c;
-  color-scheme: dark;
-  font-family: "Space Grotesk", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --bg: #f6f4ef;
+  --card: #ffffff;
+  --line: #e4e0d8;
+  --line-strong: #cfc9bd;
+  --text: #14131a;
+  --text-2: #6b6875;
+  --accent: #6e54ff;
+  --accent-hover: #5a40f0;
+  --accent-soft: #f1eeff;
+  --btn: #6e54ff;
+  --credit: #0f7b5f;
+  --debt: #c2410c;
+  --eth: #64748b;
+  --ink-on-green: #14131a;
+  --serif: "Instrument Serif", "Times New Roman", Georgia, serif;
+  --sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+  font-family: var(--sans);
   color: var(--text);
   background: var(--bg);
 }
@@ -24,7 +36,9 @@ body {
   background: var(--bg);
   color: var(--text);
   font-size: 16px;
+  line-height: 1.45;
   -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
@@ -34,6 +48,10 @@ p {
   margin: 0;
 }
 
+h3 {
+  font-weight: 600;
+}
+
 button {
   font: inherit;
   cursor: pointer;
@@ -41,12 +59,14 @@ button {
 
 a {
   color: var(--accent);
+  text-underline-offset: 3px;
 }
 
 .mono,
 .num {
-  font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  font-family: var(--mono);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 .muted {
@@ -79,16 +99,16 @@ a {
 .card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 18px;
+  border-radius: 8px;
+  padding: 20px;
 }
 
+/* kart etiketi: cümle düzeninde, sessiz */
 .card > h2,
 .eyebrow {
-  font-size: 13px;
+  font-family: var(--sans);
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--text-2);
   margin-bottom: 12px;
 }
@@ -97,24 +117,25 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 0;
-  border-radius: 10px;
-  padding: 12px 20px;
+  border: 1px solid var(--btn);
+  border-radius: 6px;
+  padding: 12px 22px;
   font-weight: 600;
   font-size: 16px;
   background: var(--btn);
   color: #fff;
   min-height: 48px;
   text-decoration: none;
-  transition: background 0.15s ease, opacity 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
 }
 
 .btn:hover:not(:disabled) {
-  background: #8b74ff;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
 }
 
@@ -123,19 +144,19 @@ a {
 }
 
 .btn.ghost {
-  background: transparent;
-  border: 1px solid var(--line);
+  background: var(--card);
+  border: 1px solid var(--line-strong);
   color: var(--text);
 }
 
 .btn.ghost:hover:not(:disabled) {
-  background: var(--line);
+  background: var(--bg);
+  border-color: var(--text-2);
 }
 
 .btn.big {
-  font-size: 20px;
-  min-height: 60px;
-  letter-spacing: 0.02em;
+  font-size: 18px;
+  min-height: 56px;
 }
 
 .tag {
@@ -146,19 +167,20 @@ a {
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   color: var(--text-2);
+  background: var(--card);
   white-space: nowrap;
 }
 
 .tag.measured {
   color: var(--credit);
-  border-color: rgba(46, 230, 168, 0.45);
+  border-color: var(--credit);
 }
 
 .tag.estimate {
   color: var(--accent);
-  border-color: rgba(139, 116, 255, 0.5);
+  border-color: var(--accent);
 }
 
 .tag.computed {
@@ -172,12 +194,12 @@ a {
   flex: none;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  background: var(--line);
-  border: 1px solid #3d3560;
+  border-radius: 50%;
+  background: var(--card);
+  border: 1px solid var(--accent);
   color: var(--text);
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: 600;
+  font-size: 12px;
   letter-spacing: 0.02em;
 }
 
@@ -201,7 +223,7 @@ a {
   align-items: center;
   gap: 10px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--text);
   text-decoration: none;
 }
@@ -209,8 +231,8 @@ a {
 .brand .logo {
   display: grid;
   place-items: center;
-  border-radius: 9px;
-  background: var(--btn);
+  border-radius: 6px;
+  background: var(--accent);
 }
 
 nav.links {
@@ -225,7 +247,7 @@ nav.links a {
   align-items: center;
   min-height: 44px;
   padding: 0 12px;
-  border-radius: 8px;
+  border-radius: 6px;
   color: var(--text-2);
   text-decoration: none;
 }
@@ -241,9 +263,9 @@ input[type="password"] {
   width: 100%;
   min-height: 48px;
   padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--bg);
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--card);
   color: var(--text);
 }
 
@@ -272,6 +294,15 @@ a:focus-visible {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ---------- telefon ---------- */
 .phone {
   max-width: 520px;
@@ -282,7 +313,8 @@ a:focus-visible {
 }
 
 .balance {
-  font-size: 34px;
+  font-family: var(--mono);
+  font-size: 36px;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
@@ -301,16 +333,17 @@ a:focus-visible {
 .chip {
   min-height: 48px;
   padding: 0 16px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: transparent;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--card);
   color: var(--text);
   font-weight: 600;
 }
 
 .chip.on {
   border-color: var(--accent);
-  background: rgba(139, 116, 255, 0.16);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .company-list {
@@ -328,16 +361,16 @@ a:focus-visible {
   min-height: 56px;
   padding: 8px 12px;
   text-align: left;
-  border-radius: 10px;
+  border-radius: 6px;
   border: 1px solid var(--line);
-  background: transparent;
+  background: var(--card);
   color: var(--text);
   font-weight: 500;
 }
 
 .company.on {
   border-color: var(--accent);
-  background: rgba(139, 116, 255, 0.16);
+  background: var(--accent-soft);
 }
 
 .company .grow {
@@ -362,34 +395,36 @@ a:focus-visible {
 }
 
 .net {
+  font-family: var(--mono);
   font-size: 24px;
   font-weight: 600;
 }
 
+/* telefondaki takas sonucu: beyaz kart, serif başlık */
 .result-card {
-  background: var(--credit);
-  border-color: var(--credit);
-  color: var(--ink-on-green);
+  background: var(--card);
+  border: 1px solid var(--text);
+  color: var(--text);
 }
 
 .result-card > h2 {
-  color: var(--ink-on-green);
-  opacity: 0.8;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 30px;
+  color: var(--text);
+  margin-bottom: 8px;
 }
 
 .result-card a {
-  color: var(--ink-on-green);
+  color: var(--accent);
   font-weight: 600;
 }
 
 .result-card .big-num {
+  font-family: var(--mono);
   font-size: 34px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
-}
-
-.result-card .btn {
-  background: var(--ink-on-green);
   color: var(--credit);
 }
 
@@ -397,48 +432,55 @@ a:focus-visible {
 .landing {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 16px 24px 40px;
+  padding: 16px 32px 48px;
 }
 
 .landing-nav {
-  padding: 4px 0 8px;
+  padding: 6px 0 10px;
+  border-bottom: 1px solid var(--line);
 }
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 40px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 56px;
   align-items: center;
   min-height: calc(100vh - 90px);
-  padding: 24px 0 40px;
+  padding: 32px 0 48px;
+}
+
+.hero .eyebrow {
+  margin-bottom: 14px;
 }
 
 .hero h1 {
-  font-size: clamp(36px, 5vw, 64px);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  margin: 8px 0 20px;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(44px, 6.2vw, 92px);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  margin: 0 0 24px;
 }
 
 .hero .lead {
-  font-size: clamp(17px, 1.5vw, 21px);
-  line-height: 1.5;
+  font-size: clamp(17px, 1.45vw, 20px);
+  line-height: 1.55;
   color: var(--text-2);
-  max-width: 560px;
+  max-width: 34em;
 }
 
 .hero-cta {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 28px;
+  margin-top: 32px;
 }
 
 .loop {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 18px 18px 14px;
+  border-radius: 8px;
+  padding: 20px 20px 14px;
   display: grid;
   gap: 8px;
 }
@@ -449,9 +491,9 @@ a:focus-visible {
 }
 
 .loop-amt {
-  font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 17px;
-  font-weight: 700;
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .loop-amt.debt {
@@ -467,28 +509,29 @@ a:focus-visible {
   justify-items: center;
   gap: 4px;
   text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
 }
 
 .loop-stage {
   font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-weight: 600;
   color: var(--text-2);
   padding: 2px 10px;
   border-radius: 999px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
 }
 
 .loop-stage.on {
-  color: var(--ink-on-green);
-  background: var(--credit);
-  border-color: var(--credit);
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .loop-value {
+  font-family: var(--mono);
   font-size: clamp(38px, 4vw, 52px);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
 }
 
@@ -500,40 +543,45 @@ a:focus-visible {
 .band {
   display: flex;
   align-items: center;
-  gap: 28px;
-  padding: 26px 28px;
-  border-radius: 16px;
+  gap: 32px;
+  padding: 28px 32px;
+  border-radius: 8px;
   border: 1px solid var(--line);
-  border-left: 4px solid var(--debt);
+  border-left: 3px solid var(--debt);
   background: var(--card);
 }
 
 .band-num {
-  font-size: clamp(36px, 5vw, 60px);
-  font-weight: 700;
+  font-family: var(--mono);
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 600;
   white-space: nowrap;
+  letter-spacing: -0.02em;
 }
 
 .band-title {
-  font-size: 22px;
-  font-weight: 600;
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
   margin-bottom: 4px;
 }
 
-.block {
-  padding: 56px 0 0;
+section.block {
+  padding: 72px 0 0;
 }
 
 .block-title {
-  font-size: clamp(26px, 3vw, 36px);
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(32px, 3.6vw, 48px);
   letter-spacing: -0.01em;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .block-note {
-  margin-top: 16px;
-  max-width: 820px;
-  line-height: 1.5;
+  margin-top: 18px;
+  max-width: 46em;
+  line-height: 1.6;
 }
 
 .steps {
@@ -548,30 +596,31 @@ a:focus-visible {
 
 .step {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   align-content: start;
-  padding: 22px;
+  padding: 24px;
 }
 
 .step h3 {
-  font-size: 21px;
+  font-size: 20px;
 }
 
 .step p,
 .uses p {
-  line-height: 1.5;
+  line-height: 1.55;
   font-size: 16px;
 }
 
 .step-no {
   display: inline-grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--btn);
-  color: #fff;
-  font-weight: 700;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-weight: 600;
 }
 
 .versus {
@@ -582,21 +631,31 @@ a:focus-visible {
 
 .bignum {
   display: grid;
-  gap: 10px;
-  padding: 24px;
+  gap: 12px;
+  padding: 28px;
+}
+
+.versus .bignum:first-child .bignum-value {
+  color: var(--accent);
+}
+
+.versus .bignum:last-child .bignum-value {
+  color: var(--eth);
 }
 
 .bignum-value {
+  font-family: var(--mono);
   font-size: clamp(32px, 3.6vw, 52px);
-  white-space: nowrap;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.05;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
 }
 
 .bignum-label {
   color: var(--text-2);
   font-size: 17px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .uses {
@@ -611,24 +670,26 @@ a:focus-visible {
 }
 
 .cta-strip {
-  margin-top: 56px;
+  margin-top: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
-  padding: 28px;
-  border-radius: 16px;
-  border: 1px solid #4a3f7a;
-  background: rgba(139, 116, 255, 0.12);
+  padding: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
 }
 
 .cta-strip h2 {
-  font-size: clamp(22px, 2.4vw, 30px);
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(26px, 2.8vw, 38px);
 }
 
 .footer {
-  margin-top: 48px;
+  margin-top: 56px;
   padding-top: 24px;
   border-top: 1px solid var(--line);
   display: flex;
@@ -650,7 +711,7 @@ a:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 14px 22px 18px;
+  padding: 14px 24px 18px;
 }
 
 .screen-grid {
@@ -690,15 +751,15 @@ a:focus-visible {
   justify-content: center;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 18px;
+  border-radius: 8px;
+  padding: 20px;
 }
 
 .stage > .graph {
   position: absolute;
   inset: 0;
   border: 0;
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
 .graph {
@@ -706,7 +767,7 @@ a:focus-visible {
   height: 100%;
   display: block;
   background: var(--card);
-  border-radius: 14px;
+  border-radius: 8px;
   border: 1px solid var(--line);
 }
 
@@ -719,7 +780,7 @@ a:focus-visible {
 }
 
 .last-line {
-  padding: 12px 16px;
+  padding: 12px 18px;
   font-size: 16px;
 }
 
@@ -727,6 +788,10 @@ a:focus-visible {
   display: grid;
   gap: 8px;
   font-size: 17px;
+}
+
+.stat-lines .num {
+  font-weight: 600;
 }
 
 .side-qr {
@@ -739,8 +804,9 @@ a:focus-visible {
 
 .qr {
   width: 100%;
-  border-radius: 10px;
+  border-radius: 6px;
   background: #fff;
+  border: 1px solid var(--line);
   padding: 8px;
   display: block;
 }
@@ -750,10 +816,12 @@ a:focus-visible {
 }
 
 .fact .fact-num {
+  font-family: var(--mono);
   font-size: clamp(28px, 2.3vw, 44px);
-  white-space: nowrap;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
 }
 
 .fact p {
@@ -762,33 +830,37 @@ a:focus-visible {
 }
 
 .counter {
-  padding: 16px 20px;
-  border-radius: 14px;
+  padding: 18px 22px;
+  border-radius: 8px;
   background: var(--card);
   border: 1px solid var(--line);
 }
 
+/* sayaç etiketi: büyük harf yok, projeksiyonda okunur boy */
 .counter small {
   display: block;
   color: var(--text-2);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-weight: 500;
+  margin-bottom: 6px;
 }
 
 .counter .val {
+  font-family: var(--mono);
   font-size: clamp(40px, 4vw, 80px);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.05;
   white-space: nowrap;
+  letter-spacing: -0.03em;
 }
 
 .counter .val .unit {
+  font-family: var(--sans);
   font-size: 18px;
+  font-weight: 500;
   color: var(--text-2);
-  margin-left: 6px;
+  margin-left: 8px;
+  letter-spacing: 0;
 }
 
 .counter .arrow {
@@ -797,7 +869,7 @@ a:focus-visible {
 }
 
 .counter.flow {
-  border-color: #4a3f7a;
+  border-color: var(--line-strong);
 }
 
 .counter.flow .val {
@@ -811,37 +883,45 @@ a:focus-visible {
 }
 
 .bar {
-  height: 12px;
-  border-radius: 6px;
-  background: var(--credit);
-  margin-top: 6px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--accent);
+  margin-top: 8px;
 }
 
 .bar.eth {
-  background: #6d6591;
+  background: var(--eth);
 }
 
 /* boş durum: anlatım + QR */
 .howto {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 32px;
+  gap: 40px;
   align-items: center;
-  padding: 32px 36px;
+  padding: 36px 40px;
 }
 
 .howto-title {
-  font-size: clamp(28px, 2.6vw, 42px);
-  margin-bottom: 18px;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(34px, 3.2vw, 56px);
+  line-height: 1.05;
+  margin-bottom: 20px;
 }
 
 .howto-steps {
   margin: 0 0 16px;
-  padding-left: 26px;
+  padding-left: 28px;
   display: grid;
   gap: 14px;
   font-size: clamp(18px, 1.5vw, 24px);
   line-height: 1.4;
+}
+
+.howto-steps li::marker {
+  font-family: var(--mono);
+  color: var(--accent);
 }
 
 .howto-qr {
@@ -856,90 +936,99 @@ a:focus-visible {
   font-weight: 600;
 }
 
-/* yeşil sonuç kartı */
+/* TAKAS TAMAM anı: beyaz zemin, büyük serif, iki büyük rakam */
 .done-card {
   position: relative;
-  width: min(680px, 100%);
-  padding: 32px 34px;
-  border-radius: 16px;
-  background: var(--credit);
-  color: var(--ink-on-green);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  width: min(720px, 100%);
+  padding: 36px 40px;
+  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--text);
+  color: var(--text);
 }
 
-/* yalnızca takas anında belirir; kalıcı sonuç kartı sabit durur */
 .done-card.overlay {
   animation: rise 0.5s ease both;
 }
 
 .done-card h2 {
-  font-size: clamp(44px, 4.4vw, 72px);
-  letter-spacing: 0.03em;
-  line-height: 1;
-  margin-bottom: 20px;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(56px, 5.4vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  margin-bottom: 24px;
 }
 
 .done-headline {
-  font-size: clamp(24px, 2.2vw, 34px);
-  font-weight: 700;
-  margin-bottom: 18px;
+  font-family: var(--mono);
+  font-size: clamp(22px, 2vw, 32px);
+  font-weight: 600;
+  margin-bottom: 20px;
 }
 
 .done-card .pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
 }
 
 .done-card small {
   display: block;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.85;
-  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 6px;
 }
 
 .done-card .n {
-  font-size: clamp(36px, 3.4vw, 56px);
-  font-weight: 700;
-  line-height: 1.1;
+  font-family: var(--mono);
+  font-size: clamp(40px, 3.8vw, 64px);
+  font-weight: 600;
+  line-height: 1.05;
   white-space: nowrap;
+  letter-spacing: -0.03em;
+}
+
+.done-card .pair > div:first-child .n {
+  color: var(--credit);
+}
+
+.done-card .pair > div:last-child .n {
+  color: var(--accent);
 }
 
 .done-card .n .unit {
-  font-size: 17px;
-  font-weight: 600;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0;
 }
 
 .done-line {
-  margin-top: 18px;
+  margin-top: 20px;
   font-size: 17px;
-  font-weight: 500;
-  line-height: 1.45;
+  line-height: 1.5;
+  color: var(--text-2);
 }
 
 .done-card a {
-  color: var(--ink-on-green);
-  font-weight: 700;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .done-btn {
-  margin-top: 18px;
-  background: var(--ink-on-green);
-  color: var(--credit);
+  margin-top: 20px;
   min-width: 200px;
-}
-
-.done-btn:hover:not(:disabled) {
-  background: #0b3a2a;
 }
 
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.98);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -949,14 +1038,14 @@ a:focus-visible {
 
 /* demo */
 .demo-banner {
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #4a3f7a;
-  background: rgba(139, 116, 255, 0.14);
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  background: var(--card);
   color: var(--text);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 16px;
-  letter-spacing: 0.02em;
 }
 
 .demo-panel {
@@ -980,10 +1069,10 @@ a:focus-visible {
   flex: none;
   width: 26px;
   height: 26px;
-  border-radius: 8px;
-  background: var(--btn);
-  color: #fff;
-  font-size: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 13px;
 }
 
 .scenario {
@@ -994,9 +1083,9 @@ a:focus-visible {
   width: 100%;
   min-height: 60px;
   padding: 10px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: transparent;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--card);
   color: var(--text);
   text-align: left;
   font-size: 18px;
@@ -1007,12 +1096,12 @@ a:focus-visible {
 }
 
 .scenario:hover:not(:disabled) {
-  background: var(--line);
+  border-color: var(--text-2);
 }
 
 .scenario.on {
   border-color: var(--accent);
-  background: rgba(139, 116, 255, 0.16);
+  background: var(--accent-soft);
 }
 
 .scenario:disabled {
@@ -1021,29 +1110,25 @@ a:focus-visible {
 }
 
 .takas-btn {
-  background: var(--credit);
-  color: var(--ink-on-green);
-  font-size: 22px;
-}
-
-.takas-btn:hover:not(:disabled) {
-  background: #5cf0bf;
+  font-size: 20px;
+  letter-spacing: 0.06em;
 }
 
 /* ---------- ölçüm ---------- */
 .wide {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 18px 16px 48px;
+  padding: 18px 20px 56px;
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
 .hero-title {
-  font-size: clamp(30px, 5vw, 48px);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+  font-family: var(--serif);
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1;
 }
 
 .table-wrap {
@@ -1067,14 +1152,28 @@ td {
 th {
   color: var(--text-2);
   font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 13px;
 }
 
 th:first-child,
 td:first-child {
   text-align: left;
+}
+
+/* ---------- tam ekranda sütunlar boş kalmasın ---------- */
+@media (min-width: 1101px) {
+  .screen .col > .counter,
+  .screen .col > .fact,
+  .screen .col > .stats-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .screen .stats-card .stat-lines {
+    font-size: clamp(17px, 1.4vw, 24px);
+    gap: 14px;
+  }
 }
 
 /* ---------- dar ekranlar ---------- */
@@ -1099,7 +1198,7 @@ td:first-child {
   .hero {
     grid-template-columns: 1fr;
     min-height: 0;
-    gap: 24px;
+    gap: 28px;
   }
 }
 
@@ -1117,18 +1216,18 @@ td:first-child {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
-    padding: 20px;
+    padding: 22px;
   }
   .howto {
     grid-template-columns: 1fr;
-    padding: 22px;
+    padding: 24px;
   }
   .howto-qr {
     width: min(260px, 100%);
     justify-self: center;
   }
   .done-card {
-    padding: 22px;
+    padding: 24px;
   }
   .done-card .pair {
     grid-template-columns: 1fr;
@@ -1136,23 +1235,7 @@ td:first-child {
   .counter .val {
     font-size: 40px;
   }
-  .block {
-    padding-top: 40px;
-  }
-}
-
-/* tam ekranda sütunlar boş kalmasın: sayaçlar ve yan kartlar yüksekliği paylaşır */
-@media (min-width: 1101px) {
-  .screen .col > .counter,
-  .screen .col > .fact,
-  .screen .col > .stats-card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  .screen .stats-card .stat-lines {
-    font-size: clamp(17px, 1.4vw, 24px);
-    gap: 14px;
+  section.block {
+    padding-top: 48px;
   }
 }

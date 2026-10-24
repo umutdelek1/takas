@@ -104,7 +104,7 @@ export default function Host() {
 
       {done && (
         <section className="card result-card" role="status">
-          <h2>Takas #{done.session} · TAKAS TAMAM</h2>
+          <h2>Takas tamam · #{done.session}</h2>
           <div className="big-num num">{monLabel(done.stats.savedWei)} tasarruf</div>
           <p style={{ marginTop: 8 }}>
             {num(done.stats.invoices)} fatura, {num(done.stats.participants)} katılımcı, {num(done.stats.excluded)} dışlanan. Nakit{" "}
