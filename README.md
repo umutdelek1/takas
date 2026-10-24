@@ -77,7 +77,7 @@ Güncel adresler `src/deployment.js` dosyasındadır.
 ## Nasıl denenir
 
 - **[/#/demo](https://takas-six.vercel.app/#/demo)**: cüzdan gerekmez. Bir senaryo seçin (tedarik zinciri ya da maaş günü), TAKAS'a basın; işlemler gerçek Monad testnet işlemleridir.
-- **[/#/play](https://takas-six.vercel.app/#/play)**: bilgisayarda tarayıcıda otomatik bir geçici cüzdan oluşur ve test MON gelir; hiçbir şey kurmanız gerekmez. Telefondan girildiğinde MetaMask ile bağlanmak gerekir.
+- **[/#/play](https://takas-six.vercel.app/#/play)**: bilgisayarda tarayıcıda otomatik bir geçici cüzdan oluşur ve test MON gelir; hiçbir şey kurmanız gerekmez.
 - **MetaMask**: üst menüden "Cüzdan bağla"; MetaMask otomatik olarak Monad Testnet'e geçer (ağ yoksa ekler). Not: MetaMask yeni vercel.app alan adlarını yanlışlıkla "şüpheli" işaretleyebiliyor; kod ve kontratlar bu depoda açık.
 
 ## Sayfalar
