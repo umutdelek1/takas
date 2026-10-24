@@ -67,10 +67,10 @@ function LoopExample() {
       <svg viewBox="0 0 420 370" role="img" aria-label="Üç şirketlik borç döngüsünün takası">
         <defs>
           <marker id="lah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0 0L10 5L0 10z" fill="#C2410C" />
+            <path d="M0 0L10 5L0 10z" fill="#DC2626" />
           </marker>
           <marker id="lahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0 0L10 5L0 10z" fill="#0F7B5F" />
+            <path d="M0 0L10 5L0 10z" fill="#059669" />
           </marker>
         </defs>
         <g style={{ opacity: settling ? 0 : 1, transition: "opacity 1.2s ease" }}>
@@ -78,7 +78,7 @@ function LoopExample() {
             const r = arrow(a, b, -26);
             return (
               <g key={a + b}>
-                <path d={r.d} fill="none" stroke="#C2410C" strokeWidth={1.2 + v / 50} markerEnd="url(#lah)" />
+                <path d={r.d} fill="none" stroke="#DC2626" strokeWidth={1.2 + v / 50} markerEnd="url(#lah)" />
                 <text x={r.lx} y={r.ly} textAnchor="middle" className="loop-amt debt">
                   {v}
                 </text>
@@ -91,7 +91,7 @@ function LoopExample() {
             const r = arrow(a, b, 18);
             return (
               <g key={a + b}>
-                <path d={r.d} fill="none" stroke="#0F7B5F" strokeWidth="1.8" strokeDasharray="6 5" markerEnd="url(#lahg)" />
+                <path d={r.d} fill="none" stroke="#059669" strokeWidth="1.8" strokeDasharray="6 5" markerEnd="url(#lahg)" />
                 <text x={r.lx} y={r.ly} textAnchor="middle" className="loop-amt credit">
                   {v}
                 </text>
@@ -102,10 +102,10 @@ function LoopExample() {
         {Object.entries(NODES).map(([id, n]) => (
           <g key={id}>
             <circle cx={n.x} cy={n.y} r="28" fill="#FFFFFF" stroke="#6E54FF" strokeWidth="1.5" />
-            <text x={n.x} y={n.y + 6} textAnchor="middle" fontSize="16" fontWeight="600" fill="#14131A">
+            <text x={n.x} y={n.y + 6} textAnchor="middle" fontSize="16" fontWeight="600" fill="#0E1726">
               {id}
             </text>
-            <text x={n.x} y={n.y + (n.y < 150 ? -40 : 50)} textAnchor="middle" fontSize="14" fill="#6B6875">
+            <text x={n.x} y={n.y + (n.y < 150 ? -40 : 50)} textAnchor="middle" fontSize="14" fill="#566175">
               {n.name}
             </text>
           </g>
